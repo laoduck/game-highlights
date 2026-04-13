@@ -3,608 +3,699 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Highlights Collection</title>
+<title>CS Highlights</title>
 <style>
-  /* ========== Reset & Base ========== */
+  /* ========== Variables ========== */
+  :root {
+    --bg: #1e1e1e;
+    --bg-dark: #111111;
+    --bg-filmstrip: #111111;
+    --text-label: #666666;
+    --text-label-hover: #ffffff;
+    --arrow: rgba(255,255,255,0.2);
+    --arrow-hover: rgba(255,255,255,0.6);
+    --border-thin: rgba(255,255,255,0.08);
+    --border-active: rgba(255,255,255,0.8);
+    --font-title: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", "Courier New", "Consolas", monospace;
+    --fade-duration: 0.4s;
+    --hover-duration: 0.3s;
+    --ease: ease-in-out;
+  }
+
+  /* ========== Reset ========== */
   *, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
 
-  :root {
-    --bg-primary: #0a0a0f;
-    --bg-card: #12121a;
-    --bg-card-hover: #1a1a28;
-    --accent: #00f0ff;
-    --accent-alt: #b14aff;
-    --accent-glow: rgba(0, 240, 255, 0.15);
-    --text-primary: #e8e8f0;
-    --text-secondary: #8888a0;
-    --text-date: #6a6a80;
-    --border: #1e1e30;
-    --radius: 12px;
-    --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-
-  html {
-    scroll-behavior: smooth;
+  html, body {
+    height: 100%;
+    overflow: hidden;
   }
 
   body {
-    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ========== Animated Background ========== */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0, 240, 255, 0.04) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(177, 74, 255, 0.04) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ========== Scanline Overlay ========== */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-  }
-
-  /* ========== Header ========== */
-  .header {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 60px 20px 40px;
-  }
-
-  .header__icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    display: block;
-    animation: float 3s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  .header__title {
-    font-size: clamp(1.8rem, 5vw, 3rem);
-    font-weight: 800;
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-alt) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    text-shadow: 0 0 40px var(--accent-glow);
-  }
-
-  .header__subtitle {
-    font-size: clamp(0.85rem, 2vw, 1rem);
-    color: var(--text-secondary);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-  }
-
-  .header__line {
-    width: 120px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), var(--accent-alt), transparent);
-    margin: 24px auto 0;
-    border: none;
-  }
-
-  /* ========== Stats Bar ========== */
-  .stats {
-    position: relative;
-    z-index: 1;
+    font-family: var(--font-title);
+    background: var(--bg);
+    color: var(--text-label);
     display: flex;
-    justify-content: center;
-    gap: 40px;
-    padding: 0 20px 40px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    user-select: none;
+    transition: background var(--fade-duration) var(--ease);
   }
 
-  .stats__item {
-    text-align: center;
+  body.player-open {
+    background: var(--bg-dark);
   }
 
-  .stats__number {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--accent);
-  }
-
-  .stats__label {
-    font-size: 0.75rem;
-    color: var(--text-date);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 4px;
-  }
-
-  /* ========== Filter Tabs ========== */
-  .filters {
-    position: relative;
-    z-index: 1;
+  /* ========== Top Bar ========== */
+  .topbar {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border-thin);
+    flex-shrink: 0;
+  }
+
+  .topbar__name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-label);
+  }
+
+  .topbar__count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-label);
+  }
+
+  /* ========== Main Stage ========== */
+  .stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 0 20px 40px;
-    flex-wrap: wrap;
-  }
-
-  .filter-btn {
-    padding: 8px 20px;
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition);
-    letter-spacing: 1px;
-    font-family: inherit;
-  }
-
-  .filter-btn:hover {
-    border-color: var(--accent);
-    color: var(--text-primary);
-  }
-
-  .filter-btn.active {
-    background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(177, 74, 255, 0.15));
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
-  }
-
-  /* ========== Video Grid ========== */
-  .grid {
     position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 24px;
-    padding: 0 40px 80px;
-    max-width: 1400px;
-    margin: 0 auto;
+    min-height: 0;
+    padding: 20px 0;
   }
 
-  /* ========== Video Card ========== */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: var(--transition);
+  /* ========== Cover + Player Container ========== */
+  .showcase {
+    width: 67%;
     position: relative;
-    animation: fadeInUp 0.6s ease-out both;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  .card::before {
-    content: '';
+  .showcase__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .showcase__cover {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent-alt));
+    inset: 0;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity var(--fade-duration) var(--ease);
+  }
+
+  .showcase__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .showcase__cover.hidden {
     opacity: 0;
-    transition: var(--transition);
+    pointer-events: none;
   }
 
-  .card:hover {
-    transform: translateY(-4px);
-    background: var(--bg-card-hover);
-    border-color: rgba(0, 240, 255, 0.2);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),
-      0 0 60px rgba(0, 240, 255, 0.05);
+  /* Color placeholders for covers */
+  .showcase__cover--placeholder {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 2px;
   }
 
-  .card:hover::before {
+  .showcase__player {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--fade-duration) var(--ease);
+  }
+
+  .showcase__player.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .showcase__player video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    display: block;
+  }
+
+  /* ========== Close Button ========== */
+  .close-btn {
+    position: absolute;
+    top: -32px;
+    right: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-label);
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--fade-duration) var(--ease), color var(--hover-duration) var(--ease);
+  }
+
+  .close-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .close-btn:hover {
+    color: var(--text-label-hover);
+  }
+
+  /* ========== Plaque (label under cover) ========== */
+  .plaque {
+    margin-top: 18px;
+    text-align: center;
+    transition: opacity var(--fade-duration) var(--ease);
+  }
+
+  .plaque.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .plaque__info {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-label);
+    letter-spacing: 1px;
+  }
+
+  .plaque__separator {
+    margin: 0 10px;
+    color: rgba(255,255,255,0.15);
+  }
+
+  .play-btn {
+    margin-top: 14px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-label);
+    background: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color var(--hover-duration) var(--ease);
+  }
+
+  .play-btn:hover {
+    border-color: var(--text-label-hover);
+  }
+
+  .play-btn svg {
+    width: 12px;
+    height: 12px;
+    fill: var(--text-label);
+    margin-left: 2px;
+    transition: fill var(--hover-duration) var(--ease);
+  }
+
+  .play-btn:hover svg {
+    fill: var(--text-label-hover);
+  }
+
+  /* ========== Navigation Arrows ========== */
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 20px;
+    z-index: 10;
+    transition: opacity var(--hover-duration) var(--ease);
+  }
+
+  .nav-arrow svg {
+    width: 28px;
+    height: 28px;
+    stroke: var(--arrow);
+    stroke-width: 1.5;
+    fill: none;
+    transition: stroke var(--hover-duration) var(--ease);
+  }
+
+  .nav-arrow:hover svg {
+    stroke: var(--arrow-hover);
+  }
+
+  .nav-arrow--prev {
+    left: 40px;
+  }
+
+  .nav-arrow--next {
+    right: 40px;
+  }
+
+  .nav-arrow.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ========== Filmstrip ========== */
+  .filmstrip {
+    flex-shrink: 0;
+    height: 66px;
+    background: var(--bg-filmstrip);
+    border-top: 1px solid var(--border-thin);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    opacity: 0.3;
+    transition: opacity var(--hover-duration) var(--ease);
+  }
+
+  .filmstrip:hover {
     opacity: 1;
   }
 
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* Hide scrollbar */
+  .filmstrip::-webkit-scrollbar {
+    height: 0;
+    display: none;
   }
+  .filmstrip { scrollbar-width: none; }
 
-  /* Stagger animation */
-  .card:nth-child(1)  { animation-delay: 0.05s; }
-  .card:nth-child(2)  { animation-delay: 0.10s; }
-  .card:nth-child(3)  { animation-delay: 0.15s; }
-  .card:nth-child(4)  { animation-delay: 0.20s; }
-  .card:nth-child(5)  { animation-delay: 0.25s; }
-  .card:nth-child(6)  { animation-delay: 0.30s; }
-  .card:nth-child(7)  { animation-delay: 0.35s; }
-  .card:nth-child(8)  { animation-delay: 0.40s; }
-  .card:nth-child(9)  { animation-delay: 0.45s; }
-
-  /* ========== Video Player ========== */
-  .card__video {
-    position: relative;
-    background: #000;
-  }
-
-  .card__video video {
-    display: block;
-    width: 100%;
+  .filmstrip__thumb {
+    flex-shrink: 0;
+    height: 44px;
     aspect-ratio: 16 / 9;
-    object-fit: contain;
-    background: #000;
-  }
-
-  /* ========== Card Body ========== */
-  .card__body {
-    padding: 16px 20px 20px;
-  }
-
-  .card__tag {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 10px;
-  }
-
-  .card__tag--fps     { background: rgba(0, 240, 255, 0.12); color: var(--accent); }
-  .card__tag--moba    { background: rgba(177, 74, 255, 0.12); color: var(--accent-alt); }
-  .card__tag--rpg     { background: rgba(255, 170, 0, 0.12);  color: #ffaa00; }
-  .card__tag--br      { background: rgba(255, 60, 100, 0.12); color: #ff3c64; }
-  .card__tag--racing  { background: rgba(0, 230, 118, 0.12);  color: #00e676; }
-  .card__tag--retro   { background: rgba(255, 215, 0, 0.12);  color: #ffd700; }
-
-  .card__title {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--text-primary);
-    margin-bottom: 8px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: border-color var(--hover-duration) var(--ease);
     overflow: hidden;
+    background: #2a2a2a;
   }
 
-  .card__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .filmstrip__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
-  .card__date {
-    font-size: 0.78rem;
-    color: var(--text-date);
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .filmstrip__thumb.active {
+    border-color: var(--border-active);
   }
 
-  .card__date::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
+  /* ========== Mobile Page Indicator ========== */
+  .page-indicator {
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-label);
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 8px;
+  }
+
+  /* ========== Mobile Nav Buttons ========== */
+  .mobile-nav {
+    display: none;
+    justify-content: center;
+    gap: 40px;
+    padding: 8px 0 12px;
+  }
+
+  .mobile-nav button {
+    background: none;
+    border: 1px solid var(--border-thin);
+    color: var(--text-label);
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: var(--accent);
-    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color var(--hover-duration) var(--ease), color var(--hover-duration) var(--ease);
   }
 
-  .card__duration {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    padding: 2px 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+  .mobile-nav button:hover {
+    border-color: var(--arrow-hover);
+    color: var(--text-label-hover);
   }
 
-  /* ========== Empty State ========== */
-  .empty-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--text-secondary);
+  .mobile-nav button svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: none;
   }
 
-  .empty-state__icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-
-  .empty-state__text {
-    font-size: 1.1rem;
-  }
-
-  /* ========== Footer ========== */
-  .footer {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 40px 20px 60px;
-    border-top: 1px solid var(--border);
-    color: var(--text-date);
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-  }
-
-  .footer a {
-    color: var(--accent);
-    text-decoration: none;
-    transition: var(--transition);
-  }
-
-  .footer a:hover {
-    text-shadow: 0 0 12px var(--accent-glow);
-  }
-
-  /* ========== Scrollbar ========== */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--bg-primary);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 240, 255, 0.3);
+  .mobile-nav button.hidden {
+    opacity: 0.2;
+    pointer-events: none;
   }
 
   /* ========== Responsive ========== */
-  @media (max-width: 768px) {
-    .header {
-      padding: 40px 16px 28px;
-    }
-
-    .header__icon {
-      font-size: 36px;
-    }
-
-    .stats {
-      gap: 24px;
-      padding-bottom: 28px;
-    }
-
-    .filters {
-      padding: 0 16px 28px;
-      gap: 6px;
-    }
-
-    .filter-btn {
-      padding: 6px 14px;
-      font-size: 0.78rem;
-    }
-
-    .grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-      padding: 0 16px 60px;
-    }
+  @media (max-width: 1024px) {
+    .showcase { width: 85%; }
   }
 
-  @media (min-width: 769px) and (max-width: 1024px) {
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
-      padding: 0 24px 80px;
-    }
+  @media (max-width: 768px) {
+    .showcase { width: 95%; }
+
+    .nav-arrow { display: none; }
+
+    .filmstrip { display: none; }
+
+    .page-indicator { display: block; }
+
+    .mobile-nav { display: flex; }
+
+    .topbar { padding: 10px 16px; }
+
+    .stage { padding: 12px 0; }
+
+    .plaque__info { font-size: 10px; }
   }
 </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="header">
-    <span class="header__icon">🎮</span>
-    <h1 class="header__title">Game Highlights</h1>
-    <p class="header__subtitle">Epic Moments Collection</p>
-    <hr class="header__line">
+  <!-- Top Bar -->
+  <header class="topbar">
+    <span class="topbar__name">[CALLSIGN] — CS HIGHLIGHTS</span>
+    <span class="topbar__count" id="workCount"></span>
   </header>
 
-  <!-- Stats -->
-  <div class="stats" id="stats"></div>
+  <!-- Main Stage -->
+  <main class="stage">
+    <!-- Left Arrow -->
+    <button class="nav-arrow nav-arrow--prev hidden" id="prevBtn" aria-label="Previous">
+      <svg viewBox="0 0 24 24"><polyline points="15,4 7,12 15,20"/></svg>
+    </button>
 
-  <!-- Filter Tabs -->
-  <nav class="filters" id="filters"></nav>
+    <!-- Showcase -->
+    <div class="showcase">
+      <div class="showcase__media" id="mediaContainer">
+        <div class="showcase__cover" id="cover">
+          <span class="showcase__cover--placeholder" id="coverPlaceholder"></span>
+        </div>
+        <div class="showcase__player" id="player">
+          <button class="close-btn" id="closeBtn">&#x2715; CLOSE</button>
+        </div>
+      </div>
+      <div class="plaque" id="plaque">
+        <div class="plaque__info" id="plaqueInfo"></div>
+        <button class="play-btn" id="playBtn" aria-label="Play">
+          <svg viewBox="0 0 16 16"><polygon points="3,1 13,8 3,15"/></svg>
+        </button>
+      </div>
+    </div>
 
-  <!-- Video Grid -->
-  <main class="grid" id="videoGrid"></main>
+    <!-- Right Arrow -->
+    <button class="nav-arrow nav-arrow--next hidden" id="nextBtn" aria-label="Next">
+      <svg viewBox="0 0 24 24"><polyline points="9,4 17,12 9,20"/></svg>
+    </button>
+  </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <p>GAME HIGHLIGHTS &copy; 2026 &mdash; Built with ☕ and 🎮</p>
-  </footer>
+  <!-- Mobile Page Indicator -->
+  <div class="page-indicator" id="pageIndicator"></div>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <button id="mobilePrev" aria-label="Previous">
+      <svg viewBox="0 0 24 24"><polyline points="15,4 7,12 15,20"/></svg>
+    </button>
+    <button id="mobileNext" aria-label="Next">
+      <svg viewBox="0 0 24 24"><polyline points="9,4 17,12 9,20"/></svg>
+    </button>
+  </div>
+
+  <!-- Filmstrip -->
+  <nav class="filmstrip" id="filmstrip"></nav>
 
 <script>
 // ============================================================
-//  VIDEO DATA — 在这里增删改你的视频
-//  url: 视频直链（Cloudflare R2 公开链接）
+//  在这里修改视频数据
 //  title: 视频标题
-//  date: 日期（YYYY-MM-DD）
-//  tag: 分类标签（fps / moba / rpg / br / racing / retro）
-//  duration: 时长（可选）
+//  map: 地图名
+//  date: 日期
+//  cover: 封面图路径（留空则用纯色占位）
+//  video: 视频直链（GitHub Releases 等）
+//  color: 封面占位色（仅在没有 cover 图时使用）
 // ============================================================
-const VIDEOS = [
+const works = [
   {
-    url: 'https://github.com/FzRu1/game-highlights/releases/download/v1.0/_1.mp4',
-    title: '超市口管理员',
-    date: '2026-04-13',
-    tag: 'fps',
-    duration: ''
+    title: "超市口管理员",
+    map: "—",
+    date: "2026.04.13",
+    cover: "",
+    video: "https://github.com/FzRu1/game-highlights/releases/download/v1.0/_1.mp4",
+    color: "#2a3040"
+  },
+  {
+    title: "Placeholder #2",
+    map: "Mirage",
+    date: "2026.04.10",
+    cover: "",
+    video: "",
+    color: "#302a2a"
+  },
+  {
+    title: "Placeholder #3",
+    map: "Dust II",
+    date: "2026.04.08",
+    cover: "",
+    video: "",
+    color: "#2a302a"
+  },
+  {
+    title: "Placeholder #4",
+    map: "Nuke",
+    date: "2026.04.05",
+    cover: "",
+    video: "",
+    color: "#30282e"
+  },
+  {
+    title: "Placeholder #5",
+    map: "Ancient",
+    date: "2026.04.01",
+    cover: "",
+    video: "",
+    color: "#28302e"
   }
 ];
 
 // ============================================================
-//  TAG CONFIG
+//  State
 // ============================================================
-const TAG_CONFIG = {
-  fps:    { label: 'FPS',    class: 'card__tag--fps' },
-  moba:   { label: 'MOBA',   class: 'card__tag--moba' },
-  rpg:    { label: 'RPG',    class: 'card__tag--rpg' },
-  br:     { label: 'BR',     class: 'card__tag--br' },
-  racing: { label: 'RACING', class: 'card__tag--racing' },
-  retro:  { label: 'RETRO',  class: 'card__tag--retro' }
-};
+let currentIndex = 0;
+let isPlayerOpen = false;
 
 // ============================================================
-//  RENDER FUNCTIONS
+//  DOM refs
 // ============================================================
-
-/** Format date to readable string */
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
-
-/** Build a single video card */
-function createCard(video) {
-  const tag = TAG_CONFIG[video.tag] || { label: video.tag.toUpperCase(), class: '' };
-
-  return `
-    <article class="card" data-tag="${video.tag}">
-      <div class="card__video">
-        <video
-          src="${video.url}"
-          controls
-          preload="metadata"
-          playsinline
-        ></video>
-      </div>
-      <div class="card__body">
-        <span class="card__tag ${tag.class}">${tag.label}</span>
-        <h2 class="card__title">${video.title}</h2>
-        <div class="card__meta">
-          <time class="card__date" datetime="${video.date}">${formatDate(video.date)}</time>
-          ${video.duration ? `<span class="card__duration">${video.duration}</span>` : ''}
-        </div>
-      </div>
-    </article>
-  `;
-}
-
-/** Render stats bar */
-function renderStats(videos) {
-  const tags = [...new Set(videos.map(v => v.tag))];
-  document.getElementById('stats').innerHTML = `
-    <div class="stats__item">
-      <div class="stats__number">${videos.length}</div>
-      <div class="stats__label">Videos</div>
-    </div>
-    <div class="stats__item">
-      <div class="stats__number">${tags.length}</div>
-      <div class="stats__label">Categories</div>
-    </div>
-    <div class="stats__item">
-      <div class="stats__number">${new Date().getFullYear()}</div>
-      <div class="stats__label">Season</div>
-    </div>
-  `;
-}
-
-/** Render filter buttons */
-function renderFilters(videos) {
-  const tags = [...new Set(videos.map(v => v.tag))];
-  const filtersHTML = [
-    `<button class="filter-btn active" data-filter="all">ALL</button>`,
-    ...tags.map(t => {
-      const cfg = TAG_CONFIG[t] || { label: t.toUpperCase() };
-      return `<button class="filter-btn" data-filter="${t}">${cfg.label}</button>`;
-    })
-  ].join('');
-
-  document.getElementById('filters').innerHTML = filtersHTML;
-}
-
-/** Render video grid */
-function renderGrid(videos) {
-  const grid = document.getElementById('videoGrid');
-
-  if (videos.length === 0) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state__icon">🎮</div>
-        <p class="empty-state__text">No videos here yet — go make some highlights!</p>
-      </div>
-    `;
-    return;
-  }
-
-  grid.innerHTML = videos.map(createCard).join('');
-}
+const coverEl = document.getElementById('cover');
+const coverPlaceholder = document.getElementById('coverPlaceholder');
+const playerEl = document.getElementById('player');
+const closeBtn = document.getElementById('closeBtn');
+const playBtn = document.getElementById('playBtn');
+const plaqueEl = document.getElementById('plaque');
+const plaqueInfo = document.getElementById('plaqueInfo');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const filmstrip = document.getElementById('filmstrip');
+const workCount = document.getElementById('workCount');
+const pageIndicator = document.getElementById('pageIndicator');
+const mobilePrev = document.getElementById('mobilePrev');
+const mobileNext = document.getElementById('mobileNext');
 
 // ============================================================
-//  FILTER LOGIC
-// ============================================================
-function setupFilters() {
-  document.getElementById('filters').addEventListener('click', (e) => {
-    const btn = e.target.closest('.filter-btn');
-    if (!btn) return;
-
-    // Update active state
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const filter = btn.dataset.filter;
-    const filtered = filter === 'all'
-      ? VIDEOS
-      : VIDEOS.filter(v => v.tag === filter);
-
-    renderGrid(filtered);
-  });
-}
-
-// ============================================================
-//  INIT
+//  Init
 // ============================================================
 function init() {
-  renderStats(VIDEOS);
-  renderFilters(VIDEOS);
-  renderGrid(VIDEOS);
-  setupFilters();
+  workCount.textContent = works.length + ' WORKS';
+  buildFilmstrip();
+  showWork(0);
+  setupKeyboard();
+  setupSwipe();
 }
 
+// ============================================================
+//  Show a work by index
+// ============================================================
+function showWork(index) {
+  // Close player if open
+  if (isPlayerOpen) closePlayer();
+
+  currentIndex = index;
+  const work = works[index];
+
+  // Cover
+  if (work.cover) {
+    coverEl.innerHTML = `<img src="${work.cover}" alt="${work.title}">`;
+  } else {
+    coverEl.style.background = work.color || '#2a2a2a';
+    coverEl.innerHTML = `<span class="showcase__cover--placeholder">${work.title.toUpperCase()}</span>`;
+  }
+  coverEl.classList.remove('hidden');
+
+  // Plaque
+  plaqueInfo.innerHTML = `${work.title}<span class="plaque__separator">&mdash;</span>${work.map}<span class="plaque__separator">&mdash;</span>${work.date}`;
+  plaqueEl.classList.remove('hidden');
+
+  // Arrows
+  prevBtn.classList.toggle('hidden', index === 0);
+  nextBtn.classList.toggle('hidden', index === works.length - 1);
+  mobilePrev.classList.toggle('hidden', index === 0);
+  mobileNext.classList.toggle('hidden', index === works.length - 1);
+
+  // Filmstrip active state
+  document.querySelectorAll('.filmstrip__thumb').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+
+  // Scroll filmstrip to show active thumb
+  const activeThumb = filmstrip.children[index];
+  if (activeThumb) {
+    activeThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+
+  // Page indicator (mobile)
+  pageIndicator.textContent = `${index + 1} / ${works.length}`;
+
+  // Play button visibility
+  playBtn.style.display = work.video ? '' : 'none';
+}
+
+// ============================================================
+//  Player open / close
+// ============================================================
+function openPlayer() {
+  const work = works[currentIndex];
+  if (!work.video) return;
+
+  // Insert video element only on play (performance)
+  playerEl.innerHTML = `
+    <button class="close-btn visible" id="closeBtnInner">&#x2715; CLOSE</button>
+    <video
+      src="${work.video}"
+      controls
+      autoplay
+      playsinline
+      preload="metadata"
+    ></video>
+  `;
+
+  document.getElementById('closeBtnInner').addEventListener('click', closePlayer);
+
+  coverEl.classList.add('hidden');
+  playerEl.classList.add('active');
+  plaqueEl.classList.add('hidden');
+  document.body.classList.add('player-open');
+  isPlayerOpen = true;
+}
+
+function closePlayer() {
+  playerEl.classList.remove('active');
+  coverEl.classList.remove('hidden');
+  plaqueEl.classList.remove('hidden');
+  document.body.classList.remove('player-open');
+  isPlayerOpen = true;
+
+  // Wait for fade out then destroy video to stop playback
+  setTimeout(() => {
+    playerEl.innerHTML = '';
+    isPlayerOpen = false;
+  }, 400);
+}
+
+// ============================================================
+//  Filmstrip
+// ============================================================
+function buildFilmstrip() {
+  filmstrip.innerHTML = works.map((w, i) => {
+    if (w.cover) {
+      return `<div class="filmstrip__thumb" data-index="${i}"><img src="${w.cover}" alt="${w.title}"></div>`;
+    } else {
+      return `<div class="filmstrip__thumb" data-index="${i}" style="background:${w.color || '#2a2a2a'}"></div>`;
+    }
+  }).join('');
+
+  filmstrip.addEventListener('click', (e) => {
+    const thumb = e.target.closest('.filmstrip__thumb');
+    if (!thumb) return;
+    showWork(parseInt(thumb.dataset.index));
+  });
+}
+
+// ============================================================
+//  Navigation
+// ============================================================
+function goPrev() {
+  if (currentIndex > 0) showWork(currentIndex - 1);
+}
+
+function goNext() {
+  if (currentIndex < works.length - 1) showWork(currentIndex + 1);
+}
+
+prevBtn.addEventListener('click', goPrev);
+nextBtn.addEventListener('click', goNext);
+mobilePrev.addEventListener('click', goPrev);
+mobileNext.addEventListener('click', goNext);
+playBtn.addEventListener('click', openPlayer);
+
+// ========== Keyboard ==========
+function setupKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') goPrev();
+    if (e.key === 'ArrowRight') goNext();
+    if (e.key === 'Escape' && isPlayerOpen) closePlayer();
+  });
+}
+
+// ========== Touch Swipe (mobile) ==========
+function setupSwipe() {
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const stage = document.querySelector('.stage');
+
+  stage.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  stage.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goNext();
+      else goPrev();
+    }
+  }, { passive: true });
+}
+
+// ============================================================
+//  Start
+// ============================================================
 document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
