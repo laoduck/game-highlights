@@ -256,11 +256,11 @@
     background: #000;
   }
 
-  .card__video iframe {
+  .card__video video {
     display: block;
     width: 100%;
     aspect-ratio: 16 / 9;
-    border: none;
+    object-fit: contain;
     background: #000;
   }
 
@@ -456,8 +456,7 @@
 <script>
 // ============================================================
 //  VIDEO DATA — 在这里增删改你的视频
-//  bvid: B站视频 BV 号（如 BV1xx411x7xx）
-//  p: 分P编号（默认 1，多P视频可指定）
+//  url: 视频直链（Cloudflare R2 公开链接）
 //  title: 视频标题
 //  date: 日期（YYYY-MM-DD）
 //  tag: 分类标签（fps / moba / rpg / br / racing / retro）
@@ -465,8 +464,7 @@
 // ============================================================
 const VIDEOS = [
   {
-    bvid: 'BV1kvQhBnE7b',
-    p: 1,
+    url: '',   // ← R2 上传后把公开链接填在这里
     title: '完美操作 #1',
     date: '2026-04-13',
     tag: 'fps',
@@ -507,13 +505,12 @@ function createCard(video) {
   return `
     <article class="card" data-tag="${video.tag}">
       <div class="card__video">
-        <iframe
-          src="//player.bilibili.com/player.html?bvid=${video.bvid}&p=${video.p || 1}&high_quality=1&autoplay=0&danmaku=0"
-          allowfullscreen
-          scrolling="no"
-          frameborder="0"
-          loading="lazy"
-        ></iframe>
+        <video
+          src="${video.url}"
+          controls
+          preload="metadata"
+          playsinline
+        ></video>
       </div>
       <div class="card__body">
         <span class="card__tag ${tag.class}">${tag.label}</span>
