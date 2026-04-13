@@ -256,11 +256,11 @@
     background: #000;
   }
 
-  .card__video video {
+  .card__video iframe {
     display: block;
     width: 100%;
     aspect-ratio: 16 / 9;
-    object-fit: contain;
+    border: none;
     background: #000;
   }
 
@@ -456,7 +456,8 @@
 <script>
 // ============================================================
 //  VIDEO DATA — 在这里增删改你的视频
-//  url: 视频直链（GitHub Release 下载链接）
+//  bvid: B站视频 BV 号（如 BV1xx411x7xx）
+//  p: 分P编号（默认 1，多P视频可指定）
 //  title: 视频标题
 //  date: 日期（YYYY-MM-DD）
 //  tag: 分类标签（fps / moba / rpg / br / racing / retro）
@@ -464,7 +465,8 @@
 // ============================================================
 const VIDEOS = [
   {
-    url: 'https://github.com/FzRu1/game-highlights/releases/download/v1.0/_1.mp4',
+    bvid: 'BV_________',   // ← 上传B站后把BV号填在这里
+    p: 1,
     title: '完美操作 #1',
     date: '2026-04-13',
     tag: 'fps',
@@ -505,13 +507,12 @@ function createCard(video) {
   return `
     <article class="card" data-tag="${video.tag}">
       <div class="card__video">
-        <video
-          src="${video.url}"
-          controls
-          preload="metadata"
-          playsinline
-          poster=""
-        ></video>
+        <iframe
+          src="https://player.bilibili.com/player.html?bvid=${video.bvid}&p=${video.p || 1}&high_quality=1&autoplay=0"
+          allowfullscreen
+          sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts allow-popups"
+          loading="lazy"
+        ></iframe>
       </div>
       <div class="card__body">
         <span class="card__tag ${tag.class}">${tag.label}</span>
