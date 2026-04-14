@@ -90,7 +90,7 @@ body.cinema-mode .bg-blur img{filter:blur(60px) brightness(.12) saturate(.8)}
 .boot-line--ready{color:var(--accent-1)}
 
 /* === Canvas === */
-#particleCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#particleCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;mix-blend-mode:screen}
 
 /* === Top Bar === */
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;border-bottom:1px solid var(--border-thin);flex-shrink:0;animation:fadeSlideDown .7s var(--ease-expo) both;position:relative;transition:opacity .4s,transform .4s}
@@ -389,7 +389,7 @@ const works=[
 ];
 
 let currentIndex=0,isPlayerOpen=false,isTransitioning=false,transitionTimer=null,currentView='showcase',currentTheme='t';
-let particles=[],pMouseX=-1000,pMouseY=-1000,mouseTrail=[];
+let pMouseX=-1000,pMouseY=-1000,shaderBurstT=0,shaderCols={c1:[.941,.647,0],c2:[1,.482,0]};
 let cinemaHideTimer=null,progressRAF=null,typeTimer=null;
 const prefersReducedMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 
@@ -481,7 +481,7 @@ function init(){
   workCount.textContent=works.length+' WORKS';
   buildFilmstrip();showWork(0,true);
   setupKeyboard();setupSwipe();setupCursorLight();updateAmbientColor(0);
-  setupParticles();setupThumbPreview();setup3DTilt();
+  setupShaderBg();setupThumbPreview();setup3DTilt();
   setupHitmarker();setupThemeToggle();
   setupScrollNav();setupRipple();
   setTimeout(()=>edgeScan.classList.add('active'),1500);
@@ -825,41 +825,102 @@ function triggerGlitch(){
 }
 
 // ============================================================
-// Particles
+// WebGL Shader Background
 // ============================================================
-function setupParticles(){
+function setupShaderBg(){
   if(prefersReducedMotion)return;
-  const cv=document.getElementById('particleCanvas'),ctx=cv.getContext('2d');let w,h;
-  function resize(){w=window.innerWidth;h=window.innerHeight;cv.width=w;cv.height=h}
-  function create(){
-    particles=[];const n=Math.floor(w*h/30000);
-    for(let i=0;i<n;i++)particles.push({x:Math.random()*w,y:Math.random()*h,s:Math.random()*1.5+.5,sx:(Math.random()-.5)*.25,sy:(Math.random()-.5)*.18,bx:0,by:0,o:Math.random()*.35+.08,hue:Math.random()*30+28});
-    particles.forEach(p=>{p.bx=p.sx;p.by=p.sy});
+  const cv=document.getElementById('particleCanvas');
+  const gl=cv.getContext('webgl',{alpha:false});
+  if(!gl)return;
+  let w,h;
+  function resize(){w=cv.width=innerWidth;h=cv.height=innerHeight;gl.viewport(0,0,w,h)}
+
+  function comp(type,src){
+    const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn('Shader:',gl.getShaderInfoLog(s));return null}return s;
   }
-  function animate(){
-    ctx.clearRect(0,0,w,h);
-    // Mouse trail
-    if(pMouseX>0&&pMouseY>0){mouseTrail.push({x:pMouseX,y:pMouseY,o:.35,s:3.5});if(mouseTrail.length>25)mouseTrail.shift()}
-    for(let i=mouseTrail.length-1;i>=0;i--){const t=mouseTrail[i];t.o*=.88;t.s*=.95;if(t.o<.01){mouseTrail.splice(i,1);continue}ctx.beginPath();ctx.arc(t.x,t.y,t.s,0,Math.PI*2);ctx.fillStyle=currentTheme==='ct'?`rgba(77,166,255,${t.o})`:`rgba(240,165,0,${t.o})`;ctx.fill()}
-    // Particle connections
-    for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){
-      const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<100){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);const lc=currentTheme==='ct'?`rgba(77,166,255,${.025*(1-d/100)})`:`rgba(240,165,0,${.025*(1-d/100)})`;ctx.strokeStyle=lc;ctx.lineWidth=.5;ctx.stroke()}
-    }
-    particles.forEach(p=>{
-      const dx=p.x-pMouseX,dy=p.y-pMouseY,d=Math.sqrt(dx*dx+dy*dy);
-      if(d<120&&d>0){const f=(120-d)/120*.4;p.x+=(dx/d)*f;p.y+=(dy/d)*f}
-      p.sx+=(p.bx-p.sx)*.03;p.sy+=(p.by-p.sy)*.03;p.x+=p.sx;p.y+=p.sy;
-      if(p.x<-5)p.x=w+5;if(p.x>w+5)p.x=-5;if(p.y<-5)p.y=h+5;if(p.y>h+5)p.y=-5;
-      ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,Math.PI*2);ctx.fillStyle=`hsla(${p.hue},80%,58%,${p.o})`;ctx.fill();
-    });
-    requestAnimationFrame(animate);
+
+  const vs=comp(gl.VERTEX_SHADER,'attribute vec2 a;void main(){gl_Position=vec4(a,0,1);}');
+  const fs=comp(gl.FRAGMENT_SHADER,`precision highp float;
+uniform float uTime,uBurst;
+uniform vec2 uRes,uMouse;
+uniform vec3 uCol1,uCol2;
+
+float h21(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+float nse(vec2 p){vec2 i=floor(p),f=fract(p);f*=f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(.866,.5,-.5,.866);for(int i=0;i<5;i++){v+=a*nse(p);p=m*p*2.;a*=.5;}return v;}
+
+void main(){
+  vec2 uv=gl_FragCoord.xy/uRes;
+  float t=uTime*.1;
+
+  // Domain warping
+  vec2 q=vec2(fbm(uv*3.+t*.7),fbm(uv*3.+vec2(5.2,1.3)+t*.5));
+  vec2 r=vec2(fbm(uv*3.+q*4.+vec2(1.7,9.2)+t*.3),fbm(uv*3.+q*4.+vec2(8.3,2.8)+t*.2));
+  float f=fbm(uv*3.+r*3.);
+
+  // Color
+  vec3 c=vec3(0.);
+  c=mix(c,uCol1*.15,clamp(f*f*3.,0.,1.));
+  c=mix(c,uCol2*.2,clamp(length(q)*.6,0.,1.));
+  c=mix(c,uCol1*.25,clamp(r.x*.8,0.,1.));
+
+  // Energy veins
+  c+=uCol1*smoothstep(.03,.0,abs(f-.5))*.5;
+  c+=uCol2*smoothstep(.04,.0,abs(fbm(uv*4.5+t*.2)-.45))*.25;
+
+  // Mouse glow + ring
+  vec2 asp=vec2(uRes.x/uRes.y,1.);
+  float md=distance(uv*asp,uMouse/uRes*asp);
+  c+=mix(uCol1,uCol2,.5)*exp(-md*md*10.)*.5;
+  c+=uCol1*smoothstep(.015,.0,abs(md-.1))*.25;
+
+  // Burst wave
+  if(uBurst>.01){
+    float br=abs(md-(1.-uBurst)*1.5);
+    c+=mix(uCol1,uCol2,.5)*smoothstep(.12,.0,br)*uBurst*1.5;
+    c+=mix(uCol1,uCol2,f)*uBurst*.15;
   }
+
+  // Vignette
+  c*=clamp(1.-dot(uv-.5,uv-.5)*1.5,0.,1.);
+  gl_FragColor=vec4(c,1.);
+}`);
+  if(!vs||!fs)return;
+
+  const pg=gl.createProgram();
+  gl.attachShader(pg,vs);gl.attachShader(pg,fs);gl.linkProgram(pg);
+  if(!gl.getProgramParameter(pg,gl.LINK_STATUS))return;
+  gl.useProgram(pg);
+
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const aPos=gl.getAttribLocation(pg,'a');
+  gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,2,gl.FLOAT,false,0,0);
+
+  const u={
+    time:gl.getUniformLocation(pg,'uTime'),res:gl.getUniformLocation(pg,'uRes'),
+    mouse:gl.getUniformLocation(pg,'uMouse'),col1:gl.getUniformLocation(pg,'uCol1'),
+    col2:gl.getUniformLocation(pg,'uCol2'),burst:gl.getUniformLocation(pg,'uBurst')
+  };
+
   document.addEventListener('mousemove',e=>{pMouseX=e.clientX;pMouseY=e.clientY});
-  window.addEventListener('resize',()=>{resize();create()});
-  resize();create();animate();
+  window.addEventListener('resize',resize);
+  resize();
+
+  (function render(){
+    gl.uniform1f(u.time,performance.now()/1000);
+    gl.uniform2f(u.res,w,h);
+    gl.uniform2f(u.mouse,pMouseX,h-pMouseY);
+    gl.uniform3fv(u.col1,shaderCols.c1);
+    gl.uniform3fv(u.col2,shaderCols.c2);
+    gl.uniform1f(u.burst,Math.max(0,1-(performance.now()-shaderBurstT)/800));
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    requestAnimationFrame(render);
+  })();
 }
-function burstParticles(){if(prefersReducedMotion)return;particles.forEach(p=>{p.sx+=(Math.random()-.5)*3;p.sy+=(Math.random()-.5)*3})}
+function burstParticles(){shaderBurstT=performance.now()}
 
 // ============================================================
 // Hitmarker System
@@ -897,9 +958,9 @@ function setTheme(side){
     themeToggle.textContent='T-SIDE';
     themeToggle.classList.remove('active');
   }
-  // Update particle colors
-  const hueBase=side==='ct'?210:28;
-  particles.forEach(p=>{p.hue=Math.random()*30+hueBase});
+  // Update shader colors
+  if(side==='ct'){shaderCols.c1=[.302,.651,1];shaderCols.c2=[.176,.490,.824]}
+  else{shaderCols.c1=[.941,.647,0];shaderCols.c2=[1,.482,0]}
 }
 
 function setupThemeToggle(){
