@@ -53,6 +53,9 @@
 @keyframes killFeedIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
 @keyframes killFeedOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(50px)}}
 @keyframes borderFlow{to{--border-angle:360deg}}
+@keyframes coverMorphOut{0%{opacity:1;transform:scale(1);filter:brightness(1)}100%{opacity:0;transform:scale(1.08);filter:brightness(.15)}}
+@keyframes coverMorphIn{0%{opacity:0;transform:scale(1.08);filter:brightness(.15)}100%{opacity:1;transform:scale(1);filter:brightness(1)}}
+@keyframes rippleExpand{0%{width:0;height:0;opacity:.6}100%{width:120px;height:120px;opacity:0}}
 
 /* === Reset === */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -68,6 +71,12 @@ body.booting::after,body.booting::before{animation:none!important;opacity:0!impo
 /* Noise texture */
 body::before{content:'';position:fixed;inset:-10%;width:120%;height:120%;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");background-size:256px 256px;pointer-events:none;z-index:9998;opacity:.5;animation:noiseShift 8s ease-in-out infinite;mix-blend-mode:overlay}
 body::after{content:'';position:fixed;inset:0;background:linear-gradient(180deg,transparent 0%,rgba(240,165,0,.04) 40%,rgba(255,123,0,.08) 50%,rgba(240,165,0,.04) 60%,transparent 100%);height:120px;width:100%;pointer-events:none;z-index:9999;animation:scanSweep .7s cubic-bezier(.4,0,.2,1) .1s forwards}
+
+/* === Blurred Background === */
+.bg-blur{position:fixed;inset:-30px;z-index:0;overflow:hidden;background:var(--bg)}
+.bg-blur img{width:calc(100% + 60px);height:calc(100% + 60px);object-fit:cover;filter:blur(50px) brightness(.3) saturate(1.2);opacity:0;transition:opacity 1.2s var(--ease)}
+.bg-blur img.visible{opacity:1}
+body.cinema-mode .bg-blur img{filter:blur(60px) brightness(.12) saturate(.8)}
 
 /* === Boot Screen === */
 .boot-screen{position:fixed;inset:0;background:#0a0a14;z-index:10000;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
@@ -252,6 +261,13 @@ body.cinema-mode .corner-accents{opacity:0}
 .timeline__play:hover{border-color:var(--accent-1);background:rgba(240,165,0,.12);color:var(--accent-1);box-shadow:0 0 16px rgba(240,165,0,.12)}
 .timeline__play:empty{display:none}
 
+/* Cover Morph Transition */
+.showcase__cover.morphing-out{animation:coverMorphOut .5s var(--ease-expo) forwards;pointer-events:none}
+.showcase__cover.morphing-in{animation:coverMorphIn .45s var(--ease-expo) both}
+
+/* Ripple Shockwave */
+.ripple{position:fixed;pointer-events:none;z-index:99998;border:1.5px solid var(--accent-1);border-radius:50%;transform:translate(-50%,-50%);animation:rippleExpand .5s ease-out forwards;box-shadow:0 0 6px var(--accent-1)}
+
 /* Typewriter Cursor */
 .type-cursor{color:var(--accent-1);animation:bootCursorBlink .5s step-end infinite;font-weight:400}
 
@@ -319,6 +335,7 @@ body[data-theme="ct"].player-open{background:var(--bg-dark)}
 </style>
 </head>
 <body class="booting">
+<div class="bg-blur" id="bgBlur"><img id="bgBlurImg" alt=""></div>
 <div class="boot-screen" id="bootScreen"><div class="boot-content" id="bootContent"></div></div>
 <canvas id="particleCanvas"></canvas>
 
@@ -466,6 +483,7 @@ function init(){
   setupKeyboard();setupSwipe();setupCursorLight();updateAmbientColor(0);
   setupParticles();setupThumbPreview();setup3DTilt();
   setupHitmarker();setupThemeToggle();
+  setupScrollNav();setupRipple();
   setTimeout(()=>edgeScan.classList.add('active'),1500);
 }
 
@@ -492,13 +510,30 @@ function setup3DTilt(){
 // ============================================================
 // Show Work
 // ============================================================
-function showWork(index,isInitial){
+function showWork(index,isInitial,useFlip){
   if(index===currentIndex&&!isInitial)return;
   if(isPlayerOpen)closePlayer();
   if(transitionTimer){clearTimeout(transitionTimer);transitionTimer=null}
   const dir=index>currentIndex?1:-1;
-  coverEl.classList.remove('cover-out','cover-in','hidden');
+  coverEl.classList.remove('cover-out','cover-in','hidden','morphing-out','morphing-in');
   if(isInitial){applyWorkContent(index);plaqueEl.classList.remove('hidden');plaqueEl.classList.add('animate-in')}
+  else if(useFlip){
+    isTransitioning=true;sfx.whoosh();burstParticles();
+    plaqueEl.classList.remove('animate-in');plaqueEl.classList.add('hidden');
+    mediaContainer.style.transition='transform .28s ease-in,opacity .28s';
+    mediaContainer.style.transform='perspective(800px) rotateX('+(dir>0?'70':'-70')+'deg)';
+    mediaContainer.style.opacity='0';
+    transitionTimer=setTimeout(()=>{
+      applyWorkContent(index);updateAmbientColor(index);
+      mediaContainer.style.transform='perspective(800px) rotateX('+(dir>0?'-70':'70')+'deg)';
+      void mediaContainer.offsetWidth;
+      mediaContainer.style.transition='transform .32s ease-out,opacity .32s';
+      mediaContainer.style.transform='perspective(800px) rotateX(0)';
+      mediaContainer.style.opacity='1';
+      plaqueEl.classList.remove('hidden');void plaqueEl.offsetWidth;plaqueEl.classList.add('animate-in');
+      setTimeout(()=>{mediaContainer.style.transition='';mediaContainer.style.transform='';mediaContainer.style.opacity='';isTransitioning=false;transitionTimer=null},350);
+    },300);
+  }
   else{
     isTransitioning=true;triggerGlitch();burstParticles();sfx.whoosh();
     coverEl.style.setProperty('--slide-x',dir>0?'-30px':'30px');coverEl.classList.add('cover-out');
@@ -524,6 +559,7 @@ function applyWorkContent(i){
   playBtn.style.display=w.video?'':'none';
   renderHUD(w);
   if(w.side)setTheme(w.side);
+  updateBgBlur(w);
   // Update reflection
   const ref=document.getElementById('reflectEl');
   if(ref){if(w.cover)ref.innerHTML=`<img src="${w.cover}" alt="">`;else ref.innerHTML=''}
@@ -632,11 +668,15 @@ function openPlayer(){
   mediaContainer.addEventListener('mouseleave',()=>{clearTimeout(cinemaHideTimer);cinemaHideTimer=setTimeout(hideCinemaUI,800)});
   showCinemaUI();
 
-  // Activate cinema mode
-  coverEl.classList.add('hidden');playerEl.classList.remove('dismissing');playerEl.classList.add('active');
+  // Activate cinema mode — morph transition
+  coverEl.classList.remove('hidden','cover-out','cover-in');
+  coverEl.classList.add('morphing-out');
   plaqueEl.classList.add('hidden');plaqueEl.classList.remove('animate-in');
   document.body.classList.add('player-open','cinema-mode');
   isPlayerOpen=true;triggerFlash();mediaContainer.classList.add('player-glow');
+  // Delay player reveal until morph-out is partially done
+  setTimeout(()=>{playerEl.classList.remove('dismissing');playerEl.classList.add('active')},200);
+  setTimeout(()=>{coverEl.classList.add('hidden');coverEl.classList.remove('morphing-out')},500);
   // Reset tilt
   showcase.style.transform='rotateX(0) rotateY(0)';
   // Kill feed
@@ -646,10 +686,13 @@ function openPlayer(){
 function closePlayer(){
   sfx.tick();cancelAnimationFrame(progressRAF);clearTimeout(cinemaHideTimer);
   playerEl.classList.remove('active');playerEl.classList.add('dismissing');
-  coverEl.classList.remove('hidden');
   document.body.classList.remove('player-open','cinema-mode');
   mediaContainer.style.cursor='default';
+  // Morph cover back in
+  coverEl.classList.remove('hidden','morphing-out');
+  coverEl.classList.add('morphing-in');
   plaqueEl.classList.remove('hidden');void plaqueEl.offsetWidth;plaqueEl.classList.add('animate-in');
+  setTimeout(()=>{coverEl.classList.remove('morphing-in')},450);
   setTimeout(()=>{playerEl.classList.remove('dismissing');playerEl.innerHTML='';isPlayerOpen=false;mediaContainer.classList.remove('player-glow');mediaContainer.style.filter=''},420);
 }
 
@@ -884,6 +927,61 @@ function renderHUD(w){
     if(item.label)el.innerHTML=`<span>${item.label}</span> <span class="hud__val">${item.val}</span>`;
     else el.innerHTML=`<span class="hud__val">${item.val}</span>`;
     hudEl.appendChild(el);
+  });
+}
+
+// ============================================================
+// Dynamic Blurred Background
+// ============================================================
+function updateBgBlur(w){
+  const img=document.getElementById('bgBlurImg');
+  if(!w.cover){img.classList.remove('visible');return}
+  if(img.src&&img.src.includes(w.cover)){img.classList.add('visible');return}
+  img.classList.remove('visible');
+  const next=new Image();
+  next.onload=()=>{img.src=w.cover;requestAnimationFrame(()=>img.classList.add('visible'))};
+  next.src=w.cover;
+}
+
+// ============================================================
+// Scroll Wheel Flip Navigation
+// ============================================================
+function setupScrollNav(){
+  let cooldown=false;
+  window.addEventListener('wheel',e=>{
+    if(isPlayerOpen||isTransitioning||currentView!=='showcase'||cooldown)return;
+    if(Math.abs(e.deltaY)<30)return;
+    cooldown=true;
+    if(e.deltaY>0&&currentIndex<works.length-1)showWork(currentIndex+1,false,true);
+    else if(e.deltaY<0&&currentIndex>0)showWork(currentIndex-1,false,true);
+    setTimeout(()=>{cooldown=false},700);
+  },{passive:true});
+}
+
+// ============================================================
+// Button Ripple Shockwave
+// ============================================================
+function setupRipple(){
+  document.querySelectorAll('.play-btn, .topbar__btn, .nav-arrow, .ended-btn, .timeline__play, .mobile-nav button').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const rp=document.createElement('div');
+      rp.className='ripple';
+      rp.style.left=e.clientX+'px';
+      rp.style.top=e.clientY+'px';
+      document.body.appendChild(rp);
+      rp.addEventListener('animationend',()=>rp.remove());
+    });
+  });
+  // Also handle dynamically-created buttons via delegation
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('.ended-btn, .timeline__play, .close-btn');
+    if(!btn)return;
+    const rp=document.createElement('div');
+    rp.className='ripple';
+    rp.style.left=e.clientX+'px';
+    rp.style.top=e.clientY+'px';
+    document.body.appendChild(rp);
+    rp.addEventListener('animationend',()=>rp.remove());
   });
 }
 
