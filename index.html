@@ -168,6 +168,50 @@
     50%      { filter: drop-shadow(0 0 4px rgba(240,165,0,0.35)) drop-shadow(0 0 25px rgba(255,123,0,0.1)); }
   }
 
+  /* -- Boot Sequence -- */
+  @keyframes bootBarFill {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
+
+  @keyframes bootCursorBlink {
+    50% { opacity: 0; }
+  }
+
+  @keyframes bootLineIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* -- Glitch -- */
+  @keyframes glitchShake {
+    0%   { transform: translate(0); }
+    15%  { transform: translate(-4px, 1px) skewX(-0.5deg); }
+    30%  { transform: translate(3px, -1px) skewX(0.3deg); }
+    50%  { transform: translate(-2px, 0) skewX(-0.2deg); }
+    70%  { transform: translate(3px, 1px) skewX(0.4deg); }
+    85%  { transform: translate(-1px, 0); }
+    100% { transform: translate(0); }
+  }
+
+  @keyframes glitchSliceR {
+    0%   { clip-path: inset(0); transform: translateX(0); opacity: 0.7; }
+    20%  { clip-path: inset(12% 0 72% 0); transform: translateX(-8px); }
+    40%  { clip-path: inset(55% 0 28% 0); transform: translateX(6px); }
+    60%  { clip-path: inset(28% 0 52% 0); transform: translateX(-5px); }
+    80%  { clip-path: inset(68% 0 12% 0); transform: translateX(4px); }
+    100% { clip-path: inset(0); transform: translateX(0); opacity: 0; }
+  }
+
+  @keyframes glitchSliceC {
+    0%   { clip-path: inset(0); transform: translateX(0); opacity: 0.7; }
+    20%  { clip-path: inset(62% 0 18% 0); transform: translateX(7px); }
+    40%  { clip-path: inset(18% 0 62% 0); transform: translateX(-5px); }
+    60%  { clip-path: inset(45% 0 35% 0); transform: translateX(6px); }
+    80%  { clip-path: inset(8% 0 78% 0); transform: translateX(-4px); }
+    100% { clip-path: inset(0); transform: translateX(0); opacity: 0; }
+  }
+
   /* ========== Reset ========== */
   *, *::before, *::after {
     margin: 0; padding: 0; box-sizing: border-box;
@@ -188,6 +232,15 @@
   }
 
   body.player-open { background: var(--bg-dark); }
+
+  /* -- Booting: suppress content until boot completes -- */
+  body.booting .topbar { opacity: 0 !important; animation: none !important; }
+  body.booting .stage { opacity: 0 !important; }
+  body.booting .filmstrip { opacity: 0 !important; animation: none !important; }
+  body.booting .page-indicator { opacity: 0 !important; }
+  body.booting .mobile-nav { opacity: 0 !important; }
+  body.booting::after { animation: none !important; opacity: 0 !important; }
+  body.booting::before { opacity: 0 !important; }
 
   /* Noise texture */
   body::before {
@@ -210,6 +263,75 @@
     height: 120px; width: 100%;
     pointer-events: none; z-index: 9999;
     animation: scanSweep 0.7s cubic-bezier(0.4,0,0.2,1) 0.1s forwards;
+  }
+
+  /* ========== Boot Screen ========== */
+  .boot-screen {
+    position: fixed; inset: 0;
+    background: #0a0a14;
+    z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease;
+  }
+
+  .boot-screen.done {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .boot-content {
+    font-family: "Rajdhani", monospace;
+    font-size: 13px; font-weight: 600;
+    color: rgba(240,165,0,0.7);
+    letter-spacing: 2px;
+    display: flex; flex-direction: column;
+    gap: 10px;
+    min-width: 320px;
+  }
+
+  .boot-line {
+    display: flex; align-items: center; gap: 10px;
+    animation: bootLineIn 0.25s var(--ease-expo) both;
+  }
+
+  .boot-bar {
+    flex: 1; height: 2px;
+    background: rgba(240,165,0,0.08);
+    overflow: hidden;
+    border-radius: 1px;
+  }
+
+  .boot-bar__fill {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    animation: bootBarFill 0.8s ease-out 0.15s forwards;
+  }
+
+  .boot-pct {
+    font-size: 11px;
+    color: rgba(240,165,0,0.4);
+    min-width: 32px; text-align: right;
+  }
+
+  .boot-cursor {
+    display: inline-block;
+    width: 7px; height: 13px;
+    background: rgba(240,165,0,0.6);
+    animation: bootCursorBlink 0.5s step-end infinite;
+    margin-left: 2px;
+    vertical-align: middle;
+  }
+
+  .boot-line--ready {
+    color: var(--accent-1);
+  }
+
+  /* ========== Particle Canvas ========== */
+  #particleCanvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
   }
 
   /* ========== Top Bar ========== */
@@ -302,6 +424,10 @@
     animation: playerGlowPulse 3s ease-in-out infinite;
   }
 
+  .showcase__media.glitching {
+    animation: glitchShake 180ms linear forwards;
+  }
+
   .showcase__media .light-sweep {
     position: absolute; inset: 0;
     background: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(240,165,0,0.08) 42%, rgba(255,123,0,0.14) 50%, rgba(240,165,0,0.08) 58%, transparent 65%, transparent 100%);
@@ -314,6 +440,23 @@
     background: radial-gradient(ellipse at center, rgba(240,165,0,0.5) 0%, rgba(255,123,0,0.2) 50%, transparent 100%);
     pointer-events: none; z-index: 5;
     animation: flashBurst 0.35s ease-out forwards;
+  }
+
+  /* Glitch RGB slices */
+  .glitch-slice-r {
+    position: absolute; inset: 0;
+    background: rgba(255, 60, 60, 0.06);
+    pointer-events: none; z-index: 6;
+    animation: glitchSliceR 180ms steps(5) forwards;
+    mix-blend-mode: lighten;
+  }
+
+  .glitch-slice-c {
+    position: absolute; inset: 0;
+    background: rgba(60, 255, 255, 0.06);
+    pointer-events: none; z-index: 6;
+    animation: glitchSliceC 180ms steps(5) forwards;
+    mix-blend-mode: lighten;
   }
 
   .showcase__media::after {
@@ -362,7 +505,6 @@
   .corner--br::before { bottom: 0; right: 0; width: 18px; height: 1px; }
   .corner--br::after  { bottom: 0; right: 0; width: 1px;  height: 18px; }
 
-  /* Edge scan */
   .edge-scan {
     position: absolute; left: -1px; top: -2px;
     width: 1px; height: 40px;
@@ -535,7 +677,7 @@
     box-shadow: 0 0 28px rgba(240,165,0,0.2);
   }
 
-  /* ========== Close Button (outside clip-path) ========== */
+  /* ========== Close Button ========== */
   .close-btn {
     position: absolute;
     top: -36px; right: 0;
@@ -725,6 +867,65 @@
 
   .filmstrip__thumb.active:hover { transform: scale(1.15); }
 
+  /* ========== Thumb Preview Tooltip ========== */
+  .thumb-preview {
+    position: fixed;
+    width: 220px;
+    clip-path: var(--clip-media);
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(4px) scale(0.92);
+    transition: opacity 0.2s var(--ease), transform 0.2s var(--ease-expo);
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 1px rgba(240,165,0,0.3);
+  }
+
+  .thumb-preview.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .thumb-preview__img {
+    width: 100%; aspect-ratio: 16 / 9;
+    object-fit: cover; display: block;
+  }
+
+  .thumb-preview__placeholder {
+    width: 100%; aspect-ratio: 16 / 9;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Rajdhani", var(--font-mono);
+    font-size: 10px; font-weight: 600;
+    color: rgba(240,165,0,0.15);
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+
+  .thumb-preview__info {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 20px 12px 8px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    font-family: "Rajdhani", "Noto Sans SC", sans-serif;
+    font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 1px;
+  }
+
+  .thumb-preview__map {
+    font-size: 10px;
+    color: rgba(240,165,0,0.5);
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  .thumb-preview__arrow {
+    position: absolute; bottom: -5px;
+    left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(240,165,0,0.25);
+  }
+
   /* Keyboard accessibility */
   .filmstrip__thumb:focus-visible {
     outline: 2px solid var(--accent-1);
@@ -807,6 +1008,7 @@
     .topbar::after { animation: none; }
     body::before { animation: none; }
     body::after { display: none; }
+    .boot-screen { display: none; }
   }
 
   /* ========== Responsive ========== */
@@ -824,10 +1026,19 @@
     .stage { padding: 12px 0; }
     .plaque__title { font-size: 14px; }
     .plaque__meta { font-size: 10px; }
+    .thumb-preview { display: none; }
   }
 </style>
 </head>
-<body>
+<body class="booting">
+
+  <!-- Boot Screen -->
+  <div class="boot-screen" id="bootScreen">
+    <div class="boot-content" id="bootContent"></div>
+  </div>
+
+  <!-- Particle Canvas -->
+  <canvas id="particleCanvas"></canvas>
 
   <!-- Top Bar -->
   <header class="topbar">
@@ -889,6 +1100,11 @@
   <!-- Filmstrip -->
   <nav class="filmstrip" id="filmstrip"></nav>
 
+  <!-- Thumb Preview Tooltip -->
+  <div class="thumb-preview" id="thumbPreview">
+    <div class="thumb-preview__arrow"></div>
+  </div>
+
 <script>
 // ============================================================
 //  Video data
@@ -943,6 +1159,12 @@ let currentIndex = 0;
 let isPlayerOpen = false;
 let isTransitioning = false;
 let transitionTimer = null;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Particle state (module-level for burst access)
+let particles = [];
+let particleMouseX = -1000;
+let particleMouseY = -1000;
 
 // ============================================================
 //  DOM refs
@@ -962,6 +1184,63 @@ const mobilePrev = document.getElementById('mobilePrev');
 const mobileNext = document.getElementById('mobileNext');
 const edgeScan = document.getElementById('edgeScan');
 const mediaContainer = document.getElementById('mediaContainer');
+const thumbPreview = document.getElementById('thumbPreview');
+
+// ============================================================
+//  Boot Sequence
+// ============================================================
+function runBootSequence() {
+  // Skip boot for reduced motion
+  if (prefersReducedMotion) {
+    const bs = document.getElementById('bootScreen');
+    if (bs) bs.remove();
+    document.body.classList.remove('booting');
+    init();
+    return;
+  }
+
+  const bootContent = document.getElementById('bootContent');
+  const bootLines = [
+    { text: '> SYS.INIT', delay: 200 },
+    { text: '> LOADING ASSETS', delay: 500, hasBar: true },
+    { text: `> ${works.length} HIGHLIGHTS FOUND`, delay: 1500 },
+    { text: '> STATUS: ONLINE', delay: 1800, isReady: true },
+  ];
+
+  bootLines.forEach(line => {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'boot-line' + (line.isReady ? ' boot-line--ready' : '');
+
+      if (line.hasBar) {
+        el.innerHTML = `<span>${line.text}</span>` +
+          `<div class="boot-bar"><div class="boot-bar__fill"></div></div>` +
+          `<span class="boot-pct">100%</span>`;
+      } else if (line.isReady) {
+        el.innerHTML = `<span>${line.text}</span><span class="boot-cursor"></span>`;
+      } else {
+        el.textContent = line.text;
+      }
+
+      bootContent.appendChild(el);
+    }, line.delay);
+  });
+
+  // Fade out boot screen
+  setTimeout(() => {
+    const bootScreen = document.getElementById('bootScreen');
+    bootScreen.classList.add('done');
+
+    setTimeout(() => {
+      document.body.classList.remove('booting');
+      bootScreen.remove();
+    }, 400);
+  }, 2300);
+
+  // Init content while boot plays (hidden behind boot screen)
+  // Animations won't run yet due to body.booting overrides
+  init();
+}
 
 // ============================================================
 //  Init
@@ -974,8 +1253,9 @@ function init() {
   setupSwipe();
   setupCursorLight();
   updateAmbientColor(0);
+  setupParticles();
+  setupThumbPreview();
 
-  // Activate edge scan after initial animations settle
   setTimeout(() => { edgeScan.classList.add('active'); }, 1500);
 }
 
@@ -1001,6 +1281,10 @@ function showWork(index, isInitial) {
     plaqueEl.classList.add('animate-in');
   } else {
     isTransitioning = true;
+
+    // Glitch + particle burst on transition
+    triggerGlitch();
+    burstParticles();
 
     coverEl.style.setProperty('--slide-x', direction > 0 ? '-30px' : '30px');
     coverEl.classList.add('cover-out');
@@ -1050,7 +1334,6 @@ function applyWorkContent(index) {
     coverEl.innerHTML = `<span class="showcase__cover--placeholder">${work.title.toUpperCase()}</span>`;
   }
 
-  // Plaque — split into title + meta
   plaqueTitle.textContent = work.title;
   plaqueMeta.innerHTML = `${work.map}<span class="plaque__separator">&mdash;</span>${work.date}`;
 
@@ -1102,7 +1385,6 @@ function openPlayer() {
 
   document.getElementById('closeBtnInner').addEventListener('click', closePlayer);
 
-  // Hide loading hint when video can play
   const video = playerEl.querySelector('video');
   const loadingHint = document.getElementById('loadingHint');
 
@@ -1154,8 +1436,6 @@ function openPlayer() {
   isPlayerOpen = true;
 
   triggerFlash();
-
-  // Player glow effect
   mediaContainer.classList.add('player-glow');
 }
 
@@ -1196,7 +1476,6 @@ function buildFilmstrip() {
     showWork(parseInt(thumb.dataset.index));
   });
 
-  // Keyboard support for filmstrip
   filmstrip.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       const thumb = e.target.closest('.filmstrip__thumb');
@@ -1204,6 +1483,60 @@ function buildFilmstrip() {
       e.preventDefault();
       showWork(parseInt(thumb.dataset.index));
     }
+  });
+}
+
+// ============================================================
+//  Thumb Preview Tooltip
+// ============================================================
+function setupThumbPreview() {
+  filmstrip.addEventListener('mouseover', (e) => {
+    const thumb = e.target.closest('.filmstrip__thumb');
+    if (!thumb) return;
+
+    const index = parseInt(thumb.dataset.index);
+    const work = works[index];
+
+    let content = '';
+    if (work.cover) {
+      content = `<img class="thumb-preview__img" src="${work.cover}" alt="${work.title}">`;
+    } else {
+      content = `<div class="thumb-preview__placeholder" style="background:${work.color || '#2a2a2a'}">${work.title.toUpperCase()}</div>`;
+    }
+
+    content += `<div class="thumb-preview__info">
+      <div>${work.title}</div>
+      <div class="thumb-preview__map">${work.map} &mdash; ${work.date}</div>
+    </div>`;
+    content += `<div class="thumb-preview__arrow"></div>`;
+
+    thumbPreview.innerHTML = content;
+
+    // Position above the thumbnail
+    const rect = thumb.getBoundingClientRect();
+    const previewW = 220;
+    const previewH = previewW * 9 / 16 + 40; // image + info area
+    let left = rect.left + rect.width / 2 - previewW / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - previewW - 8));
+    const top = rect.top - previewH - 10;
+
+    thumbPreview.style.left = left + 'px';
+    thumbPreview.style.top = top + 'px';
+
+    // Position arrow to point at thumb center
+    const arrow = thumbPreview.querySelector('.thumb-preview__arrow');
+    const arrowLeft = rect.left + rect.width / 2 - left;
+    arrow.style.left = Math.max(14, Math.min(arrowLeft, previewW - 14)) + 'px';
+
+    requestAnimationFrame(() => {
+      thumbPreview.classList.add('visible');
+    });
+  });
+
+  filmstrip.addEventListener('mouseout', (e) => {
+    const thumb = e.target.closest('.filmstrip__thumb');
+    if (!thumb) return;
+    thumbPreview.classList.remove('visible');
   });
 }
 
@@ -1295,9 +1628,155 @@ function updateAmbientColor(index) {
 }
 
 // ============================================================
+//  Glitch Effect
+// ============================================================
+function triggerGlitch() {
+  if (prefersReducedMotion) return;
+
+  // Shake the media container
+  mediaContainer.classList.remove('glitching');
+  void mediaContainer.offsetWidth;
+  mediaContainer.classList.add('glitching');
+  mediaContainer.addEventListener('animationend', function handler() {
+    mediaContainer.classList.remove('glitching');
+    mediaContainer.removeEventListener('animationend', handler);
+  });
+
+  // Red channel slice
+  const sliceR = document.createElement('div');
+  sliceR.className = 'glitch-slice-r';
+  mediaContainer.appendChild(sliceR);
+  sliceR.addEventListener('animationend', () => sliceR.remove());
+
+  // Cyan channel slice
+  const sliceC = document.createElement('div');
+  sliceC.className = 'glitch-slice-c';
+  mediaContainer.appendChild(sliceC);
+  sliceC.addEventListener('animationend', () => sliceC.remove());
+}
+
+// ============================================================
+//  Particle System
+// ============================================================
+function setupParticles() {
+  if (prefersReducedMotion) return;
+
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() {
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+  }
+
+  function createParticles() {
+    particles = [];
+    const count = Math.floor(w * h / 30000); // ~55 on 1920x1080
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        size: Math.random() * 1.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.25,
+        speedY: (Math.random() - 0.5) * 0.18,
+        baseSpeedX: 0,
+        baseSpeedY: 0,
+        opacity: Math.random() * 0.35 + 0.08,
+        hue: Math.random() * 30 + 28, // gold-orange range
+      });
+    }
+    // Store base speeds for burst recovery
+    particles.forEach(p => {
+      p.baseSpeedX = p.speedX;
+      p.baseSpeedY = p.speedY;
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Draw connection lines between nearby particles
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(240, 165, 0, ${0.025 * (1 - dist / 100)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Update and draw particles
+    particles.forEach(p => {
+      // Mouse repulsion
+      const dx = p.x - particleMouseX;
+      const dy = p.y - particleMouseY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120 && dist > 0) {
+        const force = (120 - dist) / 120 * 0.4;
+        p.x += (dx / dist) * force;
+        p.y += (dy / dist) * force;
+      }
+
+      // Dampen burst speed back to base
+      p.speedX += (p.baseSpeedX - p.speedX) * 0.03;
+      p.speedY += (p.baseSpeedY - p.speedY) * 0.03;
+
+      p.x += p.speedX;
+      p.y += p.speedY;
+
+      // Wrap around
+      if (p.x < -5) p.x = w + 5;
+      if (p.x > w + 5) p.x = -5;
+      if (p.y < -5) p.y = h + 5;
+      if (p.y > h + 5) p.y = -5;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 80%, 58%, ${p.opacity})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  // Track mouse for particle repulsion
+  document.addEventListener('mousemove', (e) => {
+    particleMouseX = e.clientX;
+    particleMouseY = e.clientY;
+  });
+
+  window.addEventListener('resize', () => {
+    resize();
+    createParticles();
+  });
+
+  resize();
+  createParticles();
+  animate();
+}
+
+function burstParticles() {
+  if (prefersReducedMotion) return;
+  particles.forEach(p => {
+    p.speedX += (Math.random() - 0.5) * 3;
+    p.speedY += (Math.random() - 0.5) * 3;
+  });
+}
+
+// ============================================================
 //  Start
 // ============================================================
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', runBootSequence);
 </script>
 </body>
 </html>
