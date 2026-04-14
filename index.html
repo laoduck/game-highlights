@@ -855,47 +855,46 @@ void main(){
   float t=uTime;
   vec3 c=vec3(0.);
 
-  // === 3 aurora curtain layers ===
-  for(int i=0;i<3;i++){
+  // === 4 aurora light ribbons ===
+  for(int i=0;i<4;i++){
     float fi=float(i);
-    float spd=.04+fi*.012;
+    float spd=.06+fi*.015;
 
-    // Curtain base edge — organic undulation
-    float base=.25+fi*.18;
-    base+=fbm(vec2(uv.x*1.5+fi*4.,t*spd))*.15;
-    base+=sin(uv.x*4.+t*spd*3.+fi*2.2)*.05;
+    // Ribbon path — organic undulation
+    float cy=.18+fi*.2;
+    cy+=fbm(vec2(uv.x*1.8+fi*3.,t*spd))*.12;
+    cy+=sin(uv.x*5.+t*spd*2.+fi*1.7)*.03;
 
-    // Distance above edge
-    float above=uv.y-base;
+    // Asymmetric profile: sharp bottom edge, diffuse upward
+    float d=uv.y-cy;
+    float below=max(0.,-d);
+    float above=max(0.,d);
+    float profile=exp(-below*below*600.)
+                 +exp(-above*above*25.)*.5
+                 +exp(-above*3.)*.12;
 
-    // Profile: bright at edge, decays upward
-    float edge=smoothstep(-.02,.01,above);
-    float profile=edge*exp(-above*above*5.)
-                 +smoothstep(0.,.02,above)*exp(-above*2.)*.4;
+    // Brightness variation along ribbon
+    float bright=fbm(vec2(uv.x*3.+fi*7.+t*spd*.5,fi));
+    bright=smoothstep(.15,.65,bright);
 
-    // Vertical ray columns
-    float rays=noise(vec2(uv.x*15.+t*(.08+fi*.03),fi*5.));
-    rays=smoothstep(.3,.7,rays);
-    rays*=.7+noise(vec2(uv.x*40.+t*.2,fi*3.))*.3;
+    // Gentle texture (0.65–1.0 range, never creates dark holes)
+    float tex=noise(vec2(uv.x*25.+t*.08+fi*5.,above*6.+fi*3.));
+    tex=.65+tex*.35;
 
-    // Brightness pulse — different parts at different times
-    float pulse=sin(t*.25+fi*1.5+uv.x*1.5)*.3+.7;
+    // Color per ribbon
+    vec3 col=mix(uCol1,uCol2,fi/3.+sin(uv.x*2.+t*.04+fi*1.5)*.15);
+    col+=(uCol1+uCol2)*.15*exp(-below*below*600.);
 
-    // Color gradient along curtain
-    vec3 col=mix(uCol1,uCol2,sin(uv.x*2.5+t*.06+fi*2.)*.5+.5);
-    col+=mix(uCol1,uCol2,.5)*smoothstep(.05,0.,above)*.25;
-
-    c+=col*profile*rays*pulse*.6;
+    c+=col*profile*bright*tex*.55;
   }
 
-  // Shimmer points
-  float sp=noise(uv*60.+t*.3);
-  c+=mix(uCol1,uCol2,.5)*pow(sp,10.)*1.5;
+  // Shimmer specks
+  c+=mix(uCol1,uCol2,.5)*pow(noise(uv*50.+t*.2),12.)*.7;
 
-  // Overall breathing
-  c*=sin(t*.12)*.12+.88;
+  // Breathing
+  c*=sin(t*.15)*.1+.9;
 
-  // Burst flash
+  // Burst
   c*=1.+uBurst*uBurst*.8;
 
   // Vignette
