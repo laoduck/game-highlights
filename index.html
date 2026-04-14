@@ -848,57 +848,81 @@ uniform vec3 uCol1,uCol2;
 
 float hash(vec2 p){p=fract(p*vec2(443.897,441.423));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}
 float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
-float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(.866,.5,-.5,.866);for(int i=0;i<6;i++){v+=a*noise(p);p=m*p*2.;a*=.5;}return v;}
 
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes;
   float t=uTime;
+  float asp=uRes.x/uRes.y;
+
+  // Perspective warp — lines converge toward top
+  vec2 pUv=uv;
+  pUv.x=(uv.x-.5)*(1.15-uv.y*.3)+.5;
+
+  // Grid (square cells, aspect-corrected)
+  vec2 guv=vec2(pUv.x*asp,pUv.y)*18.;
+  vec2 gf=fract(guv);
+  vec2 gid=floor(guv);
+
+  // Distance to nearest grid line
+  float dH=min(gf.y,1.-gf.y);
+  float dV=min(gf.x,1.-gf.x);
+
+  // Lines: sharp core + soft glow
+  float lH=smoothstep(.025,.005,dH);
+  float lV=smoothstep(.025,.005,dV);
+  float lHg=smoothstep(.09,.01,dH);
+  float lVg=smoothstep(.09,.01,dV);
+
   vec3 c=vec3(0.);
 
-  // === 4 aurora light ribbons ===
-  for(int i=0;i<4;i++){
-    float fi=float(i);
-    float spd=.06+fi*.015;
+  // Base grid (dim)
+  c+=uCol1*max(lH,lV)*.06;
+  c+=uCol1*max(lHg,lVg)*.012;
 
-    // Ribbon path — organic undulation
-    float cy=.18+fi*.2;
-    cy+=fbm(vec2(uv.x*1.8+fi*3.,t*spd))*.12;
-    cy+=sin(uv.x*5.+t*spd*2.+fi*1.7)*.03;
+  // === Horizontal pulses (2 per line, opposite dirs) ===
+  float hId=floor(guv.y+.5);
+  float hp1=fract(pUv.x*asp*2.-t*.12+hash(vec2(hId,1.))*100.);
+  float hp2=fract(pUv.x*asp*2.5+t*.18+hash(vec2(hId,7.))*100.);
+  c+=uCol1*exp(-hp1*hp1*20.)*lH*.55;
+  c+=uCol2*exp(-hp2*hp2*20.)*lH*.4;
+  c+=uCol1*exp(-hp1*hp1*20.)*lHg*.08;
+  c+=uCol2*exp(-hp2*hp2*20.)*lHg*.06;
 
-    // Asymmetric profile: sharp bottom edge, diffuse upward
-    float d=uv.y-cy;
-    float below=max(0.,-d);
-    float above=max(0.,d);
-    float profile=exp(-below*below*600.)
-                 +exp(-above*above*25.)*.5
-                 +exp(-above*3.)*.12;
+  // === Vertical pulses (2 per line, opposite dirs) ===
+  float vId=floor(guv.x+.5);
+  float vp1=fract(pUv.y*2.-t*.1+hash(vec2(3.,vId))*100.);
+  float vp2=fract(pUv.y*2.5+t*.14+hash(vec2(9.,vId))*100.);
+  c+=uCol2*exp(-vp1*vp1*20.)*lV*.45;
+  c+=uCol1*exp(-vp2*vp2*20.)*lV*.35;
+  c+=uCol2*exp(-vp1*vp1*20.)*lVg*.06;
+  c+=uCol1*exp(-vp2*vp2*20.)*lVg*.04;
 
-    // Brightness variation along ribbon
-    float bright=fbm(vec2(uv.x*3.+fi*7.+t*spd*.5,fi));
-    bright=smoothstep(.15,.65,bright);
+  // === Intersection nodes ===
+  float nb=sin(t*.8+gid.x*2.1+gid.y*1.7)*.5+.5;
+  nb*=sin(t*.3+gid.x*.9+gid.y*2.3)*.5+.5;
+  c+=mix(uCol1,uCol2,.5)*lH*lV*nb*.7;
+  float nd=length(gf-.5);
+  c+=mix(uCol1,uCol2,.5)*exp(-nd*nd*12.)*nb*.12;
 
-    // Gentle texture (0.65–1.0 range, never creates dark holes)
-    float tex=noise(vec2(uv.x*25.+t*.08+fi*5.,above*6.+fi*3.));
-    tex=.65+tex*.35;
+  // === Cell activation (faint data-flow fill) ===
+  float ca=noise(vec2(gid.x*.7+t*.15,gid.y*.5+t*.1));
+  c+=mix(uCol1,uCol2,hash(gid))*smoothstep(.78,.88,ca)*.03;
 
-    // Color per ribbon
-    vec3 col=mix(uCol1,uCol2,fi/3.+sin(uv.x*2.+t*.04+fi*1.5)*.15);
-    col+=(uCol1+uCol2)*.15*exp(-below*below*600.);
-
-    c+=col*profile*bright*tex*.55;
-  }
-
-  // Shimmer specks
-  c+=mix(uCol1,uCol2,.5)*pow(noise(uv*50.+t*.2),12.)*.7;
+  // === Scan wave (slow vertical sweep) ===
+  float sy=fract(t*.035);
+  float sd=min(abs(uv.y-sy),1.-abs(uv.y-sy));
+  float sw=exp(-sd*sd*50.);
+  c+=uCol1*sw*max(lH,lV)*.4;
+  c+=uCol1*sw*max(lHg,lVg)*.06;
 
   // Breathing
-  c*=sin(t*.15)*.1+.9;
+  c*=sin(t*.2)*.06+.94;
 
   // Burst
-  c*=1.+uBurst*uBurst*.8;
+  c*=1.+uBurst*uBurst;
 
   // Vignette
-  c*=clamp(1.-dot(uv-.5,uv-.5)*1.2,0.,1.);
+  c*=clamp(1.-dot(uv-.5,uv-.5)*1.3,0.,1.);
   gl_FragColor=vec4(c,1.);
 }`);
   if(!vs||!fs)return;
