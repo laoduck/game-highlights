@@ -31,8 +31,6 @@
     --ease: ease-in-out;
     --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --slide-x: 0px;
-    --ambient-color: rgba(240, 165, 0, 0.15);
-    --ambient-spread: 120px;
     --cursor-x: 50%;
     --cursor-y: 50%;
     --accent-1: #f0a500;
@@ -40,10 +38,8 @@
     --accent-3: #ffd000;
     --accent-glow-1: rgba(240, 165, 0, 0.3);
     --accent-glow-2: rgba(255, 123, 0, 0.25);
-    --accent-glow-3: rgba(255, 208, 0, 0.2);
     --clip-media: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
     --clip-thumb: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
-    --clip-btn: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
   }
 
   /* ========== Keyframes ========== */
@@ -73,13 +69,13 @@
   }
 
   @keyframes coverOut {
-    from { opacity: 1; transform: scale(1)    translateX(0);              filter: brightness(1); }
+    from { opacity: 1; transform: scale(1) translateX(0); filter: brightness(1); }
     to   { opacity: 0; transform: scale(0.97) translateX(var(--slide-x)); filter: brightness(0.5); }
   }
 
   @keyframes coverIn {
     from { opacity: 0; transform: scale(0.97) translateX(var(--slide-x)); filter: brightness(0.5); }
-    to   { opacity: 1; transform: scale(1)    translateX(0);              filter: brightness(1); }
+    to   { opacity: 1; transform: scale(1) translateX(0); filter: brightness(1); }
   }
 
   @keyframes plaqueIn {
@@ -89,22 +85,22 @@
 
   @keyframes playerReveal {
     from { opacity: 0; transform: scale(0.93); filter: brightness(1.8); }
-    to   { opacity: 1; transform: scale(1);    filter: brightness(1); }
+    to   { opacity: 1; transform: scale(1); filter: brightness(1); }
   }
 
   @keyframes playerDismiss {
-    from { opacity: 1; transform: scale(1);    }
+    from { opacity: 1; transform: scale(1); }
     to   { opacity: 0; transform: scale(0.96); }
   }
 
   @keyframes closeBtnSlideIn {
-    from { opacity: 0; transform: translateY(-10px); }
+    from { opacity: 0; transform: translateY(-8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes borderGlow {
-    0%, 100% { border-color: rgba(240,165,0,0.4);  box-shadow: 0 0 6px rgba(240,165,0,0.1), 0 -4px 18px rgba(240,165,0,0.06); }
-    50%      { border-color: rgba(240,165,0,0.9);   box-shadow: 0 0 16px rgba(255,123,0,0.2), 0 -6px 26px rgba(240,165,0,0.1); }
+    0%, 100% { border-color: rgba(240,165,0,0.4); box-shadow: 0 0 6px rgba(240,165,0,0.1); }
+    50%      { border-color: rgba(240,165,0,0.9); box-shadow: 0 0 16px rgba(255,123,0,0.2); }
   }
 
   @keyframes scanSweep {
@@ -137,16 +133,48 @@
     to   { transform: rotate(360deg); }
   }
 
+  @keyframes cornerPulse {
+    0%, 100% { opacity: 0.3; }
+    50%      { opacity: 0.7; }
+  }
+
+  @keyframes edgeScan {
+    0%   { top: -2px; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: calc(100% - 2px); opacity: 0; }
+  }
+
+  @keyframes endedFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes endedBtnIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes noiseShift {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(-2%, 2%); }
+    50%  { transform: translate(2%, -1%); }
+    75%  { transform: translate(-1%, -2%); }
+    100% { transform: translate(0, 0); }
+  }
+
+  @keyframes playerGlowPulse {
+    0%, 100% { filter: drop-shadow(0 0 2px rgba(240,165,0,0.2)) drop-shadow(0 0 15px rgba(255,123,0,0.05)); }
+    50%      { filter: drop-shadow(0 0 4px rgba(240,165,0,0.35)) drop-shadow(0 0 25px rgba(255,123,0,0.1)); }
+  }
+
   /* ========== Reset ========== */
   *, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    margin: 0; padding: 0; box-sizing: border-box;
   }
 
   html, body {
-    height: 100%;
-    overflow: hidden;
+    height: 100%; overflow: hidden;
   }
 
   body {
@@ -159,34 +187,34 @@
     transition: background 0.6s var(--ease-expo);
   }
 
-  body.player-open {
-    background: var(--bg-dark);
+  body.player-open { background: var(--bg-dark); }
+
+  /* Noise texture */
+  body::before {
+    content: '';
+    position: fixed; inset: -10%;
+    width: 120%; height: 120%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    pointer-events: none; z-index: 9998;
+    opacity: 0.5;
+    animation: noiseShift 8s ease-in-out infinite;
+    mix-blend-mode: overlay;
   }
 
+  /* One-shot scan line */
   body::after {
     content: '';
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(240,165,0,0.04) 40%,
-      rgba(255,123,0,0.08) 50%,
-      rgba(240,165,0,0.04) 60%,
-      transparent 100%
-    );
-    height: 120px;
-    width: 100%;
-    pointer-events: none;
-    z-index: 9999;
-    animation: scanSweep 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(240,165,0,0.04) 40%, rgba(255,123,0,0.08) 50%, rgba(240,165,0,0.04) 60%, transparent 100%);
+    height: 120px; width: 100%;
+    pointer-events: none; z-index: 9999;
+    animation: scanSweep 0.7s cubic-bezier(0.4,0,0.2,1) 0.1s forwards;
   }
 
   /* ========== Top Bar ========== */
   .topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex; justify-content: space-between; align-items: center;
     padding: 12px 24px;
     border-bottom: 1px solid var(--border-thin);
     flex-shrink: 0;
@@ -196,21 +224,8 @@
 
   .topbar::after {
     content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      transparent 30%,
-      var(--accent-1) 42%,
-      var(--accent-2) 50%,
-      var(--accent-3) 58%,
-      transparent 70%,
-      transparent 100%
-    );
+    position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, transparent 30%, var(--accent-1) 42%, var(--accent-2) 50%, var(--accent-3) 58%, transparent 70%, transparent 100%);
     background-size: 200% 100%;
     animation: topbarLight 8s ease-in-out infinite;
     opacity: 0.6;
@@ -218,175 +233,172 @@
 
   .topbar__name {
     font-family: "Rajdhani", var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
     color: var(--text-label);
   }
 
   .topbar__count {
     font-family: "Rajdhani", var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
     color: rgba(240,165,0,0.4);
   }
 
   /* ========== Main Stage ========== */
   .stage {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    min-height: 0;
-    padding: 20px 0;
-    overflow: hidden;
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; min-height: 0; padding: 20px 0; overflow: hidden;
   }
 
   .stage::before {
     content: '';
-    position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
+    position: absolute; width: 500px; height: 500px; border-radius: 50%;
     background: radial-gradient(circle, rgba(240,165,0,0.04) 0%, rgba(255,123,0,0.015) 40%, transparent 70%);
-    left: var(--cursor-x);
-    top: var(--cursor-y);
+    left: var(--cursor-x); top: var(--cursor-y);
     transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
     transition: left 0.3s ease-out, top 0.3s ease-out;
   }
 
-  /* ========== Cover + Player Container ========== */
+  /* ========== Showcase ========== */
   .showcase {
-    width: 67%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 67%; position: relative;
+    display: flex; flex-direction: column; align-items: center;
     animation: fadeScaleIn 0.9s var(--ease-expo) 0.15s both;
     z-index: 1;
   }
 
   .showcase::before {
     content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 115%;
-    height: 140%;
+    position: absolute; top: 50%; left: 50%;
+    width: 115%; height: 140%;
     transform: translate(-50%, -50%);
     background: radial-gradient(ellipse at 35% 50%, var(--accent-glow-1) 0%, transparent 60%),
                 radial-gradient(ellipse at 65% 50%, var(--accent-glow-2) 0%, transparent 60%);
     filter: blur(50px);
-    pointer-events: none;
-    z-index: -1;
+    pointer-events: none; z-index: -1;
     animation: ambientPulse 6s ease-in-out infinite;
     transition: background 0.8s var(--ease-expo);
   }
 
+  .showcase::after {
+    content: '';
+    position: absolute; top: -1px; left: -1px;
+    width: calc(100% + 2px); aspect-ratio: 16 / 9;
+    clip-path: var(--clip-media);
+    background: linear-gradient(135deg, rgba(240,165,0,0.25) 0%, rgba(240,165,0,0.06) 50%, rgba(255,123,0,0.25) 100%);
+    pointer-events: none; z-index: 0;
+  }
+
   .showcase__media {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
     overflow: hidden;
     clip-path: var(--clip-media);
     transition: filter 0.6s var(--ease-expo);
   }
 
-  .showcase::after {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    width: calc(100% + 2px);
-    aspect-ratio: 16 / 9;
-    clip-path: var(--clip-media);
-    background: linear-gradient(135deg, rgba(240,165,0,0.25) 0%, rgba(240,165,0,0.06) 50%, rgba(255,123,0,0.25) 100%);
-    pointer-events: none;
-    z-index: 0;
+  .showcase__media.player-glow {
+    animation: playerGlowPulse 3s ease-in-out infinite;
   }
 
   .showcase__media .light-sweep {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      105deg,
-      transparent 0%,
-      transparent 35%,
-      rgba(240,165,0,0.08) 42%,
-      rgba(255,123,0,0.14) 50%,
-      rgba(240,165,0,0.08) 58%,
-      transparent 65%,
-      transparent 100%
-    );
-    pointer-events: none;
-    z-index: 4;
-    animation: lightSweep 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(240,165,0,0.08) 42%, rgba(255,123,0,0.14) 50%, rgba(240,165,0,0.08) 58%, transparent 65%, transparent 100%);
+    pointer-events: none; z-index: 4;
+    animation: lightSweep 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
   }
 
   .showcase__media .flash-overlay {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: radial-gradient(ellipse at center, rgba(240,165,0,0.5) 0%, rgba(255,123,0,0.2) 50%, transparent 100%);
-    pointer-events: none;
-    z-index: 5;
+    pointer-events: none; z-index: 5;
     animation: flashBurst 0.35s ease-out forwards;
   }
 
   .showcase__media::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.035) 2px,
-      rgba(0,0,0,0.035) 4px
-    );
-    pointer-events: none;
-    z-index: 3;
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.035) 2px, rgba(0,0,0,0.035) 4px);
+    pointer-events: none; z-index: 3;
   }
 
   .showcase__media::before {
-    content: '';
-    position: absolute;
-    inset: 0;
+    content: ''; position: absolute; inset: 0;
     box-shadow: inset 0 0 80px rgba(0,0,0,0.4);
-    pointer-events: none;
-    z-index: 2;
+    pointer-events: none; z-index: 2;
   }
 
-  .showcase__cover {
+  /* ========== Corner Accents ========== */
+  .corner-accents {
+    position: absolute; top: 0; left: 0;
+    width: 100%; aspect-ratio: 16 / 9;
+    pointer-events: none; z-index: 2;
+  }
+
+  .corner {
     position: absolute;
-    inset: 0;
+    width: 18px; height: 18px;
+    animation: cornerPulse 4s ease-in-out infinite;
+  }
+
+  .corner::before, .corner::after {
+    content: ''; position: absolute;
+    background: var(--accent-1);
+  }
+
+  .corner--tl { top: -1px; left: -1px; }
+  .corner--tl::before { top: 0; left: 0; width: 18px; height: 1px; }
+  .corner--tl::after  { top: 0; left: 0; width: 1px;  height: 18px; }
+
+  .corner--tr { top: -1px; right: -1px; animation-delay: 1s; }
+  .corner--tr::before { top: 0; right: 0; width: 18px; height: 1px; }
+  .corner--tr::after  { top: 0; right: 0; width: 1px;  height: 18px; }
+
+  .corner--bl { bottom: -1px; left: -1px; animation-delay: 2s; }
+  .corner--bl::before { bottom: 0; left: 0; width: 18px; height: 1px; }
+  .corner--bl::after  { bottom: 0; left: 0; width: 1px;  height: 18px; }
+
+  .corner--br { bottom: -1px; right: -1px; animation-delay: 3s; }
+  .corner--br::before { bottom: 0; right: 0; width: 18px; height: 1px; }
+  .corner--br::after  { bottom: 0; right: 0; width: 1px;  height: 18px; }
+
+  /* Edge scan */
+  .edge-scan {
+    position: absolute; left: -1px; top: -2px;
+    width: 1px; height: 40px;
+    background: linear-gradient(180deg, transparent, var(--accent-1), transparent);
+    pointer-events: none; z-index: 3;
+    opacity: 0;
+  }
+
+  .edge-scan.active {
+    animation: edgeScan 3s cubic-bezier(0.4,0,0.2,1) infinite;
+    animation-delay: 2s;
+  }
+
+  /* ========== Cover ========== */
+  .showcase__cover {
+    position: absolute; inset: 0;
     background: #2a2a2a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     opacity: 1;
     will-change: transform, opacity, filter;
     transition: opacity var(--fade-duration) var(--ease);
   }
 
   .showcase__cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    width: 100%; height: 100%; object-fit: cover; display: block;
     animation: kenBurns 20s ease-in-out infinite alternate;
     will-change: transform;
+    transition: transform 0.4s var(--ease-expo);
   }
 
-  .showcase__cover.hidden {
-    opacity: 0;
-    pointer-events: none;
+  .showcase__media:hover .showcase__cover img {
+    animation-play-state: paused;
+    transform: scale(1.03);
   }
+
+  .showcase__cover.hidden { opacity: 0; pointer-events: none; }
 
   .showcase__cover.cover-out {
     animation: coverOut 0.35s var(--ease-expo) forwards;
@@ -399,44 +411,34 @@
 
   .showcase__cover--placeholder {
     font-family: "Rajdhani", var(--font-mono);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 14px; font-weight: 600;
     color: rgba(240,165,0,0.12);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    text-align: center;
-    line-height: 1.8;
+    letter-spacing: 4px; text-transform: uppercase;
+    text-align: center; line-height: 1.8;
   }
 
   .showcase__cover--placeholder::before {
-    content: '\25C6';
-    display: block;
-    font-size: 22px;
-    margin-bottom: 6px;
+    content: '\25C6'; display: block;
+    font-size: 22px; margin-bottom: 6px;
     color: rgba(240,165,0,0.08);
   }
 
   .showcase__cover--placeholder::after {
-    content: 'COMING SOON';
-    display: block;
-    font-size: 10px;
-    margin-top: 2px;
-    color: rgba(240,165,0,0.06);
-    letter-spacing: 6px;
+    content: 'COMING SOON'; display: block;
+    font-size: 10px; margin-top: 2px;
+    color: rgba(240,165,0,0.06); letter-spacing: 6px;
   }
 
+  /* ========== Player ========== */
   .showcase__player {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    pointer-events: none;
+    position: absolute; inset: 0;
+    opacity: 0; pointer-events: none;
     will-change: transform, opacity;
     z-index: 1;
   }
 
   .showcase__player.active {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1; pointer-events: auto;
     animation: playerReveal 0.55s var(--ease-expo) both;
   }
 
@@ -446,30 +448,22 @@
   }
 
   .showcase__player video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: #000;
-    display: block;
+    width: 100%; height: 100%;
+    object-fit: contain; background: #000; display: block;
   }
 
   /* Loading hint */
   .loading-hint {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     gap: 14px;
     background: rgba(0,0,0,0.6);
-    z-index: 6;
-    pointer-events: none;
+    z-index: 6; pointer-events: none;
   }
 
   .loading-hint__spinner {
-    width: 28px;
-    height: 28px;
+    width: 28px; height: 28px;
     border: 2px solid rgba(240,165,0,0.15);
     border-top-color: var(--accent-1);
     border-radius: 50%;
@@ -478,43 +472,88 @@
 
   .loading-hint__text {
     font-family: "Rajdhani", var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 12px; font-weight: 600;
     color: rgba(240,165,0,0.5);
-    letter-spacing: 4px;
-    text-transform: uppercase;
+    letter-spacing: 4px; text-transform: uppercase;
   }
 
-  .loading-hint--error .loading-hint__spinner {
-    display: none;
+  .loading-hint--error .loading-hint__spinner { display: none; }
+  .loading-hint--error .loading-hint__text { color: #ff4444; }
+
+  /* ========== Video Ended Overlay ========== */
+  .ended-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px;
+    z-index: 8;
+    animation: endedFadeIn 0.4s var(--ease-expo) both;
+    backdrop-filter: blur(4px);
   }
 
-  .loading-hint--error .loading-hint__text {
-    color: #ff4444;
+  .ended-overlay__label {
+    font-family: "Rajdhani", var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    color: rgba(240,165,0,0.35);
+    letter-spacing: 6px; text-transform: uppercase;
   }
 
-  /* ========== Close Button ========== */
+  .ended-overlay__actions {
+    display: flex; gap: 16px;
+    animation: endedBtnIn 0.5s var(--ease-expo) 0.15s both;
+  }
+
+  .ended-btn {
+    font-family: "Rajdhani", var(--font-mono);
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 10px 22px;
+    border: 1px solid rgba(240,165,0,0.35);
+    background: rgba(240,165,0,0.06);
+    color: rgba(240,165,0,0.7);
+    cursor: pointer;
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+    transition: all var(--hover-duration) var(--ease);
+  }
+
+  .ended-btn:hover {
+    border-color: var(--accent-1);
+    background: rgba(240,165,0,0.15);
+    color: var(--accent-1);
+    box-shadow: 0 0 20px rgba(240,165,0,0.15);
+  }
+
+  .ended-btn--primary {
+    border-color: rgba(240,165,0,0.5);
+    background: rgba(240,165,0,0.1);
+    color: var(--accent-1);
+  }
+
+  .ended-btn--primary:hover {
+    background: rgba(240,165,0,0.2);
+    box-shadow: 0 0 28px rgba(240,165,0,0.2);
+  }
+
+  /* ========== Close Button (outside clip-path) ========== */
   .close-btn {
     position: absolute;
-    top: -32px;
-    right: 0;
+    top: -36px; right: 0;
     font-family: "Rajdhani", var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 12px; font-weight: 600;
     letter-spacing: 2px;
     color: var(--text-label);
-    background: none;
-    border: none;
+    background: none; border: none;
     cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-    transition: color var(--hover-duration) var(--ease);
+    opacity: 0; pointer-events: none;
+    transition: color var(--hover-duration) var(--ease),
+                text-shadow var(--hover-duration) var(--ease);
     z-index: 10;
+    display: flex; align-items: center; gap: 6px;
   }
 
   .close-btn.visible {
-    opacity: 1;
-    pointer-events: auto;
+    opacity: 1; pointer-events: auto;
     animation: closeBtnSlideIn 0.4s var(--ease-expo) 0.2s both;
   }
 
@@ -523,17 +562,28 @@
     text-shadow: 0 0 14px rgba(240,165,0,0.4);
   }
 
+  .close-btn__key {
+    font-size: 10px;
+    padding: 2px 5px;
+    border: 1px solid rgba(240,165,0,0.15);
+    border-radius: 3px;
+    color: rgba(240,165,0,0.3);
+    transition: border-color var(--hover-duration) var(--ease),
+                color var(--hover-duration) var(--ease);
+  }
+
+  .close-btn:hover .close-btn__key {
+    border-color: rgba(240,165,0,0.4);
+    color: rgba(240,165,0,0.6);
+  }
+
   /* ========== Plaque ========== */
   .plaque {
-    margin-top: 18px;
-    text-align: center;
+    margin-top: 18px; text-align: center;
     will-change: transform, opacity;
   }
 
-  .plaque.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
+  .plaque.hidden { opacity: 0; pointer-events: none; }
 
   .plaque.animate-in {
     animation: plaqueIn 0.5s var(--ease-expo) 0.12s both;
@@ -541,20 +591,16 @@
 
   .plaque__title {
     font-family: "Rajdhani", "Noto Sans SC", sans-serif;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 16px; font-weight: 700;
     color: rgba(255,255,255,0.85);
-    letter-spacing: 2px;
-    margin-bottom: 4px;
+    letter-spacing: 2px; margin-bottom: 4px;
   }
 
   .plaque__meta {
     font-family: "Rajdhani", "Noto Sans SC", sans-serif;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 12px; font-weight: 500;
     color: var(--text-label);
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    letter-spacing: 2px; text-transform: uppercase;
   }
 
   .plaque__separator {
@@ -564,15 +610,11 @@
 
   .play-btn {
     margin-top: 14px;
-    width: 34px;
-    height: 34px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     border: 1.5px solid rgba(240,165,0,0.45);
-    background: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    background: none; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
     transition: border-color var(--hover-duration) var(--ease),
                 transform var(--hover-duration) var(--ease-expo),
                 box-shadow var(--hover-duration) var(--ease);
@@ -587,37 +629,28 @@
   }
 
   .play-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 12px; height: 12px;
     fill: rgba(240,165,0,0.55);
     margin-left: 2px;
     transition: fill var(--hover-duration) var(--ease);
   }
 
-  .play-btn:hover svg {
-    fill: var(--accent-1);
-  }
+  .play-btn:hover svg { fill: var(--accent-1); }
 
   /* ========== Navigation Arrows ========== */
   .nav-arrow {
-    position: absolute;
-    top: 50%;
+    position: absolute; top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 20px;
+    background: none; border: none;
+    cursor: pointer; padding: 20px;
     z-index: 10;
     transition: opacity var(--hover-duration) var(--ease),
                 transform var(--hover-duration) var(--ease-expo);
   }
 
   .nav-arrow svg {
-    width: 28px;
-    height: 28px;
-    stroke: var(--arrow);
-    stroke-width: 1.5;
-    fill: none;
+    width: 28px; height: 28px;
+    stroke: var(--arrow); stroke-width: 1.5; fill: none;
     transition: stroke var(--hover-duration) var(--ease),
                 filter var(--hover-duration) var(--ease);
   }
@@ -642,64 +675,46 @@
   }
 
   .nav-arrow.hidden {
-    opacity: 0;
-    pointer-events: none;
+    opacity: 0; pointer-events: none;
   }
 
   /* ========== Filmstrip ========== */
   .filmstrip {
-    flex-shrink: 0;
-    height: 66px;
+    flex-shrink: 0; height: 66px;
     background: var(--bg-filmstrip);
     border-top: 1px solid var(--border-thin);
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    gap: 4px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    display: flex; align-items: center;
+    padding: 0 12px; gap: 4px;
+    overflow-x: auto; overflow-y: hidden;
     opacity: 0.6;
     transition: opacity var(--hover-duration) var(--ease);
     animation: fadeSlideUp 0.7s var(--ease-expo) 0.35s both;
   }
 
-  .filmstrip:hover {
-    opacity: 1;
-  }
+  .filmstrip:hover { opacity: 1; }
 
-  .filmstrip::-webkit-scrollbar {
-    height: 0;
-    display: none;
-  }
+  .filmstrip::-webkit-scrollbar { height: 0; display: none; }
   .filmstrip { scrollbar-width: none; }
 
   .filmstrip__thumb {
-    flex-shrink: 0;
-    height: 44px;
-    aspect-ratio: 16 / 9;
+    flex-shrink: 0; height: 44px; aspect-ratio: 16 / 9;
     cursor: pointer;
     border: 1px solid transparent;
     transition: border-color var(--hover-duration) var(--ease),
                 transform var(--hover-duration) var(--ease-expo),
                 filter var(--hover-duration) var(--ease),
                 box-shadow var(--hover-duration) var(--ease);
-    overflow: hidden;
-    background: #2a2a2a;
+    overflow: hidden; background: #2a2a2a;
     position: relative;
     clip-path: var(--clip-thumb);
   }
 
   .filmstrip__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    width: 100%; height: 100%; object-fit: cover; display: block;
   }
 
   .filmstrip__thumb:hover {
-    transform: scale(1.15);
-    filter: brightness(1.25);
-    z-index: 2;
+    transform: scale(1.15); filter: brightness(1.25); z-index: 2;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(240,165,0,0.1);
   }
 
@@ -708,9 +723,7 @@
     transform: scale(1.05);
   }
 
-  .filmstrip__thumb.active:hover {
-    transform: scale(1.15);
-  }
+  .filmstrip__thumb.active:hover { transform: scale(1.15); }
 
   /* Keyboard accessibility */
   .filmstrip__thumb:focus-visible {
@@ -735,32 +748,25 @@
   .page-indicator {
     display: none;
     font-family: "Rajdhani", var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 13px; font-weight: 600;
     color: rgba(240,165,0,0.4);
     letter-spacing: 3px;
-    text-align: center;
-    padding: 8px;
+    text-align: center; padding: 8px;
   }
 
   /* ========== Mobile Nav ========== */
   .mobile-nav {
-    display: none;
-    justify-content: center;
-    gap: 40px;
-    padding: 8px 0 12px;
+    display: none; justify-content: center;
+    gap: 40px; padding: 8px 0 12px;
   }
 
   .mobile-nav button {
     background: none;
     border: 1px solid var(--border-thin);
     color: var(--text-label);
-    width: 44px;
-    height: 44px;
+    width: 44px; height: 44px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     transition: border-color var(--hover-duration) var(--ease),
                 color var(--hover-duration) var(--ease),
@@ -782,16 +788,12 @@
   }
 
   .mobile-nav button svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    fill: none;
+    width: 18px; height: 18px;
+    stroke: currentColor; stroke-width: 1.5; fill: none;
   }
 
   .mobile-nav button.hidden {
-    opacity: 0.2;
-    pointer-events: none;
+    opacity: 0.2; pointer-events: none;
   }
 
   /* ========== Reduced Motion ========== */
@@ -801,15 +803,10 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-    .showcase__cover img {
-      animation: none;
-    }
-    .topbar::after {
-      animation: none;
-    }
-    body::after {
-      display: none;
-    }
+    .showcase__cover img { animation: none; }
+    .topbar::after { animation: none; }
+    body::before { animation: none; }
+    body::after { display: none; }
   }
 
   /* ========== Responsive ========== */
@@ -819,19 +816,12 @@
 
   @media (max-width: 768px) {
     .showcase { width: 95%; }
-
     .nav-arrow { display: none; }
-
     .filmstrip { display: none; }
-
     .page-indicator { display: block; }
-
     .mobile-nav { display: flex; }
-
     .topbar { padding: 10px 16px; }
-
     .stage { padding: 12px 0; }
-
     .plaque__title { font-size: 14px; }
     .plaque__meta { font-size: 10px; }
   }
@@ -855,12 +845,18 @@
     <!-- Showcase -->
     <div class="showcase">
       <div class="showcase__media" id="mediaContainer">
+        <!-- Corner Accents -->
+        <div class="corner-accents">
+          <div class="corner corner--tl"></div>
+          <div class="corner corner--tr"></div>
+          <div class="corner corner--bl"></div>
+          <div class="corner corner--br"></div>
+          <div class="edge-scan" id="edgeScan"></div>
+        </div>
         <div class="showcase__cover" id="cover">
           <span class="showcase__cover--placeholder" id="coverPlaceholder"></span>
         </div>
-        <div class="showcase__player" id="player">
-          <button class="close-btn" id="closeBtn">&#x2715; CLOSE</button>
-        </div>
+        <div class="showcase__player" id="player"></div>
       </div>
       <div class="plaque" id="plaque">
         <div class="plaque__title" id="plaqueTitle"></div>
@@ -964,6 +960,8 @@ const workCount = document.getElementById('workCount');
 const pageIndicator = document.getElementById('pageIndicator');
 const mobilePrev = document.getElementById('mobilePrev');
 const mobileNext = document.getElementById('mobileNext');
+const edgeScan = document.getElementById('edgeScan');
+const mediaContainer = document.getElementById('mediaContainer');
 
 // ============================================================
 //  Init
@@ -976,6 +974,9 @@ function init() {
   setupSwipe();
   setupCursorLight();
   updateAmbientColor(0);
+
+  // Activate edge scan after initial animations settle
+  setTimeout(() => { edgeScan.classList.add('active'); }, 1500);
 }
 
 // ============================================================
@@ -1085,7 +1086,7 @@ function openPlayer() {
   if (!work.video) return;
 
   playerEl.innerHTML = `
-    <button class="close-btn visible" id="closeBtnInner">&#x2715; CLOSE</button>
+    <button class="close-btn visible" id="closeBtnInner">&#x2715; CLOSE <span class="close-btn__key">ESC</span></button>
     <div class="loading-hint" id="loadingHint">
       <div class="loading-hint__spinner"></div>
       <div class="loading-hint__text">LOADING</div>
@@ -1116,6 +1117,34 @@ function openPlayer() {
     }
   }, { once: true });
 
+  // Video ended overlay
+  video.addEventListener('ended', () => {
+    const existing = playerEl.querySelector('.ended-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'ended-overlay';
+    overlay.innerHTML = `
+      <div class="ended-overlay__label">ENDED</div>
+      <div class="ended-overlay__actions">
+        <button class="ended-btn ended-btn--primary" id="replayBtn">&#x25B6; REPLAY</button>
+        <button class="ended-btn" id="closeEndedBtn">&#x2715; CLOSE</button>
+      </div>
+    `;
+    playerEl.appendChild(overlay);
+
+    document.getElementById('replayBtn').addEventListener('click', () => {
+      overlay.remove();
+      video.currentTime = 0;
+      video.play();
+    });
+
+    document.getElementById('closeEndedBtn').addEventListener('click', () => {
+      overlay.remove();
+      closePlayer();
+    });
+  });
+
   coverEl.classList.add('hidden');
   playerEl.classList.remove('dismissing');
   playerEl.classList.add('active');
@@ -1126,8 +1155,8 @@ function openPlayer() {
 
   triggerFlash();
 
-  const media = document.getElementById('mediaContainer');
-  media.style.filter = 'drop-shadow(0 0 2px rgba(240,165,0,0.3)) drop-shadow(0 0 20px rgba(255,123,0,0.08))';
+  // Player glow effect
+  mediaContainer.classList.add('player-glow');
 }
 
 function closePlayer() {
@@ -1144,8 +1173,8 @@ function closePlayer() {
     playerEl.classList.remove('dismissing');
     playerEl.innerHTML = '';
     isPlayerOpen = false;
-    const media = document.getElementById('mediaContainer');
-    media.style.filter = '';
+    mediaContainer.classList.remove('player-glow');
+    mediaContainer.style.filter = '';
   }, 420);
 }
 
@@ -1233,21 +1262,19 @@ function setupCursorLight() {
 }
 
 function triggerLightSweep() {
-  const media = document.getElementById('mediaContainer');
-  const old = media.querySelector('.light-sweep');
+  const old = mediaContainer.querySelector('.light-sweep');
   if (old) old.remove();
 
   const sweep = document.createElement('div');
   sweep.className = 'light-sweep';
-  media.appendChild(sweep);
+  mediaContainer.appendChild(sweep);
   sweep.addEventListener('animationend', () => sweep.remove());
 }
 
 function triggerFlash() {
-  const media = document.getElementById('mediaContainer');
   const flash = document.createElement('div');
   flash.className = 'flash-overlay';
-  media.appendChild(flash);
+  mediaContainer.appendChild(flash);
   flash.addEventListener('animationend', () => flash.remove());
 }
 
